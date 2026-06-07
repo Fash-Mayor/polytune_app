@@ -29,6 +29,9 @@ yarn-error.*
 # macOS
 .DS_Store
 *.pem
+.env
+supabase/
+.vscode/
 
 # local env files
 .env*.local
