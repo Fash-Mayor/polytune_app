@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator, Dimensions } from 'react-native';
+import { useRouter } from 'expo-router'; // Removed useLocalSearchParams since we use the vault now
 import { COLORS, SPACING } from '../constants/theme';
+import * as SecureStore from 'expo-secure-store';
 
-// Pulling safely from the .env file
 const SUPABASE_FUNCTION_URL = process.env.EXPO_PUBLIC_SUPABASE_FUNCTION_URL || '';
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// Helper to convert "[01:14.20]" into 74200 milliseconds
 const parseTimecode = (t: string) => {
   if (!t) return 0;
   const match = t.match(/\[(\d+):(\d+\.\d+)\]/);
@@ -18,15 +18,32 @@ const parseTimecode = (t: string) => {
 
 export default function LyricsScreen() {
   const router = useRouter();
-  const { token } = useLocalSearchParams<{ token: string }>();
 
+  // Secure Auth State
+  const [token, setToken] = useState<string | null>(null);
+
+  // Core Data States
   const [currentTrack, setCurrentTrack] = useState<any>(null);
   const [lyricsData, setLyricsData] = useState<{o: string, tr: string, timeMs: number}[] | null>(null);
   const [fetchingLyrics, setFetchingLyrics] = useState<boolean>(false);
   
-  // Real-time sync states
+  // Sync Engine States
   const [playbackPosition, setPlaybackPosition] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+
+  // Auto-Scroll Refs
+  const scrollViewRef = useRef<ScrollView>(null);
+  const lyricPositions = useRef<{ [key: number]: number }>({});
+
+  // 1. Pull the token from the encrypted vault when the screen loads
+  useEffect(() => {
+    const loadToken = async () => {
+      const savedToken = await SecureStore.getItemAsync('spotify_token');
+      if (savedToken) setToken(savedToken);
+      else alert("Security Error: No access token found. Please reconnect Spotify.");
+    };
+    loadToken();
+  }, []);
 
   const fetchLyricsFromBackend = async (title: string, artist: string, id: string) => {
     setFetchingLyrics(true);
@@ -41,14 +58,14 @@ export default function LyricsScreen() {
       
       const data = await res.json();
       if (data.lyrics) {
-        // Map over the lyrics to attach the parsed milliseconds for the sync engine
         const processedLyrics = data.lyrics.map((line: any) => ({
           ...line,
           timeMs: parseTimecode(line.t)
         }));
         setLyricsData(processedLyrics);
+      } else {
+        alert("Could not fetch or translate lyrics for this track.");
       }
-      else alert("Could not fetch or translate lyrics for this track.");
     } catch (error) {
       console.error("Network Error:", error);
     } finally {
@@ -57,7 +74,11 @@ export default function LyricsScreen() {
   };
 
   const fetchCurrentlyPlaying = async () => {
-    if (!token) return;
+    if (!token) {
+      alert("Authentication failed: Loading token from vault. Please try again in a second.");
+      return;
+    }
+    
     try {
       const res = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
         headers: { Authorization: `Bearer ${token}` },
@@ -67,33 +88,34 @@ export default function LyricsScreen() {
         const data = await res.json();
         setCurrentTrack(data.item);
         
-        // Update the sync engine with Spotify's exact timestamp
         setPlaybackPosition(data.progress_ms);
         setIsPlaying(data.is_playing);
 
-        // Only fetch lyrics if it's a new song
         if (!lyricsData || currentTrack?.id !== data.item.id) {
             fetchLyricsFromBackend(data.item.name, data.item.artists[0].name, data.item.id);
         }
+      } else if (res.status === 204) {
+        alert("Spotify is connected, but nothing is currently playing. Start a song and try again!");
+      } else {
+        alert(`Spotify API returned an unexpected status: ${res.status}`);
       }
     } catch (error) {
       console.error("Spotify API Error:", error);
+      alert("Failed to reach Spotify. Check your network connection.");
     }
   };
 
-  // The Local Sync Engine: Ticks forward smoothly while the song plays
+  // 2. Local Sync Engine Tick
   useEffect(() => {
     if (!isPlaying) return;
     const interval = setInterval(() => {
-      setPlaybackPosition((prev) => prev + 500); // Tick half a second forward
+      setPlaybackPosition((prev) => prev + 500); 
     }, 500);
     return () => clearInterval(interval);
   }, [isPlaying]);
 
-  // Determine which lyric line is currently active
   const getActiveIndex = () => {
     if (!lyricsData) return -1;
-    // Find the last lyric whose timestamp has passed
     return lyricsData.reduce((latestIdx, line, idx) => {
       if (playbackPosition >= line.timeMs) return idx;
       return latestIdx;
@@ -101,6 +123,19 @@ export default function LyricsScreen() {
   };
 
   const activeIndex = getActiveIndex();
+
+  // 3. The Auto-Scroll Trigger
+  useEffect(() => {
+    if (activeIndex !== -1 && lyricPositions.current[activeIndex] !== undefined) {
+      const targetY = lyricPositions.current[activeIndex];
+      const centerOffset = (SCREEN_HEIGHT / 2) - 250; 
+      
+      scrollViewRef.current?.scrollTo({
+        y: Math.max(0, targetY - centerOffset),
+        animated: true,
+      });
+    }
+  }, [activeIndex]);
 
   return (
     <View style={styles.container}>
@@ -127,7 +162,7 @@ export default function LyricsScreen() {
         )}
         
         <TouchableOpacity style={styles.ghostButton} onPress={fetchCurrentlyPlaying}>
-          <Text style={styles.ghostButtonText}>Check What's Playing</Text>
+          <Text style={styles.ghostButtonText}>Sync Playback</Text>
         </TouchableOpacity>
       </View>
 
@@ -137,11 +172,21 @@ export default function LyricsScreen() {
           <Text style={styles.loadingText}>Fetching & Translating...</Text>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={styles.lyricScroll}>
+        <ScrollView 
+          ref={scrollViewRef}
+          contentContainerStyle={styles.lyricScroll}
+          showsVerticalScrollIndicator={false}
+        >
           {lyricsData && lyricsData.map((line, index) => {
             const isActive = index === activeIndex;
             return (
-              <View key={index} style={styles.lyricBlock}>
+              <View 
+                key={index} 
+                style={styles.lyricBlock}
+                onLayout={(event) => {
+                  lyricPositions.current[index] = event.nativeEvent.layout.y;
+                }}
+              >
                 <Text style={[styles.originalLine, isActive ? styles.textFull : styles.textDim]}>
                   {line.o}
                 </Text>
@@ -173,7 +218,7 @@ const styles = StyleSheet.create({
   ghostButtonText: { color: COLORS.textActive, fontSize: 12 },
   centerVoid: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { color: COLORS.textInactive, marginTop: 16, fontSize: 14, fontStyle: 'italic' },
-  lyricScroll: { padding: SPACING.margin, paddingBottom: 100 },
+  lyricScroll: { padding: SPACING.margin, paddingBottom: SCREEN_HEIGHT / 2 }, 
   lyricBlock: { marginBottom: SPACING.lyricGap },
   originalLine: { fontSize: 28, fontWeight: '700', marginBottom: 4 },
   translationLine: { fontSize: 18, fontWeight: '400' },

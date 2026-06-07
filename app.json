@@ -7,6 +7,25 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      "expo-secure-store"
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "0da6be6a-07fb-4ecc-bb6a-80d0cb83ed21"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/0da6be6a-07fb-4ecc-bb6a-80d0cb83ed21"
+    },
     "ios": {
       "supportsTablet": true
     },
@@ -17,14 +36,11 @@
         "backgroundImage": "./assets/android-icon.png",
         "monochromeImage": "./assets/android-icon.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.fashmayor.lyricsmine"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    },
-    "plugins": [
-      "expo-router",
-      "expo-status-bar"
-    ]
+    }
   }
 }
