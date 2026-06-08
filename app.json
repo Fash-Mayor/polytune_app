@@ -1,16 +1,23 @@
 {
   "expo": {
-    "name": "lyricsmine",
+    "name": "LyricsMine",
     "slug": "lyricsmine",
     "scheme": "lyricsmine",
     "version": "3.1.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/main-logo.png",
     "userInterfaceStyle": "dark",
+    "backgroundColor": "#000000",
+    "splash": {
+      "image": "./assets/main-logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
     "plugins": [
       "expo-router",
       "expo-status-bar",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-splash-screen"
     ],
     "extra": {
       "router": {
@@ -32,15 +39,12 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#000000",
-        "foregroundImage": "./assets/android-icon.png",
-        "backgroundImage": "./assets/android-icon.png",
-        "monochromeImage": "./assets/android-icon.png"
+        "foregroundImage": "./assets/source_icon.png",
+        "monochromeImage": "./assets/source_icon.png"
       },
-      "predictiveBackGestureEnabled": false,
-      "package": "com.fashmayor.lyricsmine"
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
+      "notificationIcon": "./assets/android-icon-192x192.png",
+      "package": "com.fashmayor.lyricsmine",
+      "predictiveBackGestureEnabled": false
     }
   }
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator, Dimensions, Platform } from 'react-native';
 import { useRouter } from 'expo-router'; // Removed useLocalSearchParams since we use the vault now
-import { COLORS, SPACING } from '../constants/theme';
+import { COLORS, SPACING } from '../../constants/theme';
 import * as SecureStore from 'expo-secure-store';
 
 const SUPABASE_FUNCTION_URL = process.env.EXPO_PUBLIC_SUPABASE_FUNCTION_URL || '';
@@ -38,10 +38,20 @@ export default function LyricsScreen() {
   // 1. Pull the token from the encrypted vault when the screen loads
   useEffect(() => {
     const loadToken = async () => {
-      const savedToken = await SecureStore.getItemAsync('spotify_token');
-      if (savedToken) setToken(savedToken);
-      else alert("Security Error: No access token found. Please reconnect Spotify.");
-    };
+      let savedToken = null;
+    if (Platform.OS === 'web') {
+      savedToken = localStorage.getItem('spotify_token');
+    } else {
+      savedToken = await SecureStore.getItemAsync('spotify_token');
+    }
+    
+    if (savedToken) setToken(savedToken);
+    else alert("Security Error: No access token found.");
+  };
+    //   const savedToken = await SecureStore.getItemAsync('spotify_token');
+    //   if (savedToken) setToken(savedToken);
+    //   else alert("Security Error: No access token found. Please reconnect Spotify.");
+    // };
     loadToken();
   }, []);
 
@@ -137,11 +147,28 @@ export default function LyricsScreen() {
     }
   }, [activeIndex]);
 
+  const handleDisconnect = async () => {
+    // Clear the vault
+    if (Platform.OS === 'web') {
+      localStorage.removeItem('spotify_token');
+    } else {
+      await SecureStore.deleteItemAsync('spotify_token');
+    }
+    
+    // Clear the local state
+    setToken(null);
+    setCurrentTrack(null);
+    setLyricsData(null);
+    
+    // Route back to the connect screen
+    router.replace('/');
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>← Back</Text>
+        <TouchableOpacity onPress={handleDisconnect} style={styles.backButton}>
+          <Text style={styles.backButtonText}>Disconnect</Text>
         </TouchableOpacity>
       </View>
 
@@ -188,11 +215,11 @@ export default function LyricsScreen() {
                 }}
               >
                 <Text style={[styles.originalLine, isActive ? styles.textFull : styles.textDim]}>
-                  {line.o}
+                  {line.tr}
                 </Text>
                 {line.tr && (
                   <Text style={[styles.translationLine, isActive ? styles.textDim : styles.textUltraDim]}>
-                    {line.tr}
+                    {line.o}
                   </Text>
                 )}
               </View>
@@ -206,7 +233,7 @@ export default function LyricsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  headerRow: { paddingTop: 60, paddingHorizontal: 16, paddingBottom: 16 },
+  headerRow: { paddingTop: 30, paddingHorizontal: 16, paddingBottom: 12 },
   backButton: { paddingVertical: 8 },
   backButtonText: { color: COLORS.textInactive, fontSize: 16, fontWeight: '600' },
   trackCard: { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: COLORS.border, backgroundColor: COLORS.surface },

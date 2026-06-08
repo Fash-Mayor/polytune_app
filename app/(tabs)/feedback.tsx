@@ -1,9 +1,13 @@
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
-import { COLORS, SPACING } from '../constants/theme';
+import { COLORS, SPACING } from '../../constants/theme';
 import { useState } from 'react';
 
 export default function FeedbackScreen() {
   const [type, setType] = useState<'bug' | 'translation'>('bug');
+
+  const SubmitFeedback = async () => {
+    alert("Lol, your submission no dey go anywhere💀. Jk, Implementing Feedback soon🚀");
+  }
 
   return (
     <View style={styles.container}>
@@ -33,7 +37,7 @@ export default function FeedbackScreen() {
         placeholderTextColor={COLORS.textInactive}
       />
 
-      <TouchableOpacity style={styles.submitBtn}>
+      <TouchableOpacity style={styles.submitBtn} onPress={SubmitFeedback}>
         <Text style={styles.submitBtnText}>Submit Feedback</Text>
       </TouchableOpacity>
     </View>
@@ -42,7 +46,7 @@ export default function FeedbackScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background, padding: SPACING.margin },
-  header: { color: COLORS.textInactive, fontSize: 16, marginBottom: 32, lineHeight: 24 },
+  header: { color: COLORS.textInactive, fontSize: 16, marginBottom: 32, lineHeight: 24, paddingTop: 30 },
   label: { color: COLORS.textActive, fontSize: 12, fontWeight: '700', letterSpacing: 1, marginBottom: 8 },
   toggleRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
   toggleBtn: { flex: 1, padding: 16, borderRadius: 8, borderWidth: 1, borderColor: COLORS.border, backgroundColor: COLORS.surface, alignItems: 'center' },

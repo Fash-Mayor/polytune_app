@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 import {
@@ -17,6 +18,10 @@ import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
 import { COLORS, SPACING } from "../constants/theme";
 import * as SecureStore from "expo-secure-store";
+// import { vexo } from 'vexo-analytics'; 
+
+
+// vexo('625efcf7-a3d3-4109-a674-0b3f6fc39c57')
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -26,7 +31,8 @@ const discovery = {
 };
 
 const CLIENT_ID = process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_ID || "";
-const redirectUri = "lyricsmine:///";
+// const redirectUri = "lyricsmine:///";
+const redirectUri = Platform.OS === 'web' ? 'http://127.0.0.1:8081' : 'lyricsmine:///';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -89,9 +95,15 @@ export default function HomeScreen() {
         discovery,
       );
 
+      // 2. Dynamic Storage Vault
+    if (Platform.OS === 'web') {
+      localStorage.setItem("spotify_token", token.accessToken);
+    } else {
       await SecureStore.setItemAsync("spotify_token", token.accessToken);
+    }
+    //   await SecureStore.setItemAsync("spotify_token", token.accessToken);
       setLoading(false);
-      router.replace("/lyrics");
+      router.replace("/(tabs)/lyrics");
     } catch (error) {
       console.error("Token exchange failed:", error);
       alert("Failed to securely exchange token with Spotify.");
