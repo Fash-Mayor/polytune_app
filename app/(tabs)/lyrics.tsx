@@ -1,91 +1,106 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator, Dimensions, Platform } from 'react-native';
-import { useRouter } from 'expo-router'; // Removed useLocalSearchParams since we use the vault now
+import { useRouter } from 'expo-router';
 import { COLORS, SPACING } from '../../constants/theme';
 import * as SecureStore from 'expo-secure-store';
+import EventSource from 'react-native-sse'; // The Native Android/iOS streaming fix
 
 const SUPABASE_FUNCTION_URL = process.env.EXPO_PUBLIC_SUPABASE_FUNCTION_URL || '';
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-const parseTimecode = (t: string) => {
-  if (!t) return 0;
-  const match = t.match(/\[(\d+):(\d+\.\d+)\]/);
-  if (!match) return 0;
-  const mins = parseInt(match[1], 10);
-  const secs = parseFloat(match[2]);
-  return (mins * 60 + secs) * 1000;
-};
-
 export default function LyricsScreen() {
   const router = useRouter();
 
-  // Secure Auth State
   const [token, setToken] = useState<string | null>(null);
-
-  // Core Data States
   const [currentTrack, setCurrentTrack] = useState<any>(null);
-  const [lyricsData, setLyricsData] = useState<{o: string, tr: string, timeMs: number}[] | null>(null);
+  const [lyricsData, setLyricsData] = useState<{o: string, r: string, tr: string, timeMs: number}[] | null>(null);
   const [fetchingLyrics, setFetchingLyrics] = useState<boolean>(false);
-  
-  // Sync Engine States
+  const [isRomanized, setIsRomanized] = useState<boolean>(false); 
   const [playbackPosition, setPlaybackPosition] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
-  // Auto-Scroll Refs
   const scrollViewRef = useRef<ScrollView>(null);
   const lyricPositions = useRef<{ [key: number]: number }>({});
+  
+  // Track the active SSE connection so we can cancel it if the user skips a song midway
+  const activeEventSource = useRef<EventSource | null>(null); 
 
-  // 1. Pull the token from the encrypted vault when the screen loads
   useEffect(() => {
     const loadToken = async () => {
       let savedToken = null;
-    if (Platform.OS === 'web') {
-      savedToken = localStorage.getItem('spotify_token');
-    } else {
-      savedToken = await SecureStore.getItemAsync('spotify_token');
-    }
-    
-    if (savedToken) setToken(savedToken);
-    else alert("Security Error: No access token found.");
-  };
-    //   const savedToken = await SecureStore.getItemAsync('spotify_token');
-    //   if (savedToken) setToken(savedToken);
-    //   else alert("Security Error: No access token found. Please reconnect Spotify.");
-    // };
+      if (Platform.OS === 'web') {
+        savedToken = localStorage.getItem('spotify_token');
+      } else {
+        savedToken = await SecureStore.getItemAsync('spotify_token');
+      }
+      if (savedToken) setToken(savedToken);
+      else alert("Security Error: No access token found.");
+    };
     loadToken();
   }, []);
 
-  const fetchLyricsFromBackend = async (title: string, artist: string, id: string) => {
-    setFetchingLyrics(true);
-    setLyricsData(null); 
-
-    try {
-      const res = await fetch(SUPABASE_FUNCTION_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trackTitle: title, artistName: artist, spotifyId: id })
-      });
-      
-      const data = await res.json();
-      if (data.lyrics) {
-        const processedLyrics = data.lyrics.map((line: any) => ({
-          ...line,
-          timeMs: parseTimecode(line.t)
-        }));
-        setLyricsData(processedLyrics);
-      } else {
-        alert("Could not fetch or translate lyrics for this track.");
-      }
-    } catch (error) {
-      console.error("Network Error:", error);
-    } finally {
-      setFetchingLyrics(false);
+  const fetchLyricsStream = (title: string, artist: string, id: string) => {
+    if (activeEventSource.current) {
+      activeEventSource.current.close();
     }
+
+    setFetchingLyrics(true);
+    setLyricsData([]); 
+
+    const es = new EventSource(SUPABASE_FUNCTION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ trackTitle: title, artistName: artist, spotifyId: id })
+    });
+
+    activeEventSource.current = es;
+
+    es.addEventListener("message", (event: any) => {
+      if (!event.data) return;
+
+      try {
+        const data = JSON.parse(event.data);
+
+        if (data.error) {
+          alert(data.error);
+          es.close();
+          setFetchingLyrics(false);
+          return;
+        }
+
+        if (data.item) {
+          // As soon as the first line arrives, hide the loading spinner
+          setFetchingLyrics(false);
+          
+          setLyricsData((prev) => {
+            const currentList = prev || [];
+            // Prevent duplicate line rendering
+            if (currentList.some((line) => line.timeMs === data.item.timeMs && line.o === data.item.o)) {
+              return currentList;
+            }
+            return [...currentList, data.item].sort((a, b) => a.timeMs - b.timeMs);
+          });
+        }
+
+        if (data.done) {
+          es.close();
+          setFetchingLyrics(false);
+        }
+      } catch (e) {
+        console.error("Error parsing SSE data:", e);
+      }
+    });
+
+    es.addEventListener("error", (error) => {
+      console.error("EventSource connection error:", error);
+      es.close();
+      setFetchingLyrics(false);
+    });
   };
 
   const fetchCurrentlyPlaying = async () => {
     if (!token) {
-      alert("Authentication failed: Loading token from vault. Please try again in a second.");
+      alert("Authentication failed: Loading token from vault.");
       return;
     }
     
@@ -97,25 +112,20 @@ export default function LyricsScreen() {
       if (res.status === 200) {
         const data = await res.json();
         setCurrentTrack(data.item);
-        
         setPlaybackPosition(data.progress_ms);
         setIsPlaying(data.is_playing);
 
         if (!lyricsData || currentTrack?.id !== data.item.id) {
-            fetchLyricsFromBackend(data.item.name, data.item.artists[0].name, data.item.id);
+            fetchLyricsStream(data.item.name, data.item.artists[0].name, data.item.id);
         }
       } else if (res.status === 204) {
-        alert("Spotify is connected, but nothing is currently playing. Start a song and try again!");
-      } else {
-        alert(`Spotify API returned an unexpected status: ${res.status}`);
+        alert("Spotify connected, but nothing playing!");
       }
     } catch (error) {
       console.error("Spotify API Error:", error);
-      alert("Failed to reach Spotify. Check your network connection.");
     }
   };
 
-  // 2. Local Sync Engine Tick
   useEffect(() => {
     if (!isPlaying) return;
     const interval = setInterval(() => {
@@ -134,7 +144,6 @@ export default function LyricsScreen() {
 
   const activeIndex = getActiveIndex();
 
-  // 3. The Auto-Scroll Trigger
   useEffect(() => {
     if (activeIndex !== -1 && lyricPositions.current[activeIndex] !== undefined) {
       const targetY = lyricPositions.current[activeIndex];
@@ -148,19 +157,13 @@ export default function LyricsScreen() {
   }, [activeIndex]);
 
   const handleDisconnect = async () => {
-    // Clear the vault
-    if (Platform.OS === 'web') {
-      localStorage.removeItem('spotify_token');
-    } else {
-      await SecureStore.deleteItemAsync('spotify_token');
-    }
+    if (Platform.OS === 'web') localStorage.removeItem('spotify_token');
+    else await SecureStore.deleteItemAsync('spotify_token');
     
-    // Clear the local state
     setToken(null);
     setCurrentTrack(null);
     setLyricsData(null);
-    
-    // Route back to the connect screen
+    if (activeEventSource.current) activeEventSource.current.close();
     router.replace('/');
   };
 
@@ -169,6 +172,15 @@ export default function LyricsScreen() {
       <View style={styles.headerRow}>
         <TouchableOpacity onPress={handleDisconnect} style={styles.backButton}>
           <Text style={styles.backButtonText}>Disconnect</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          onPress={() => setIsRomanized(!isRomanized)} 
+          style={[styles.ghostButton, isRomanized && { borderColor: COLORS.primary }]}
+        >
+          <Text style={[styles.ghostButtonText, isRomanized && { color: COLORS.primary, fontWeight: '700' }]}>
+            {isRomanized ? 'A/文 Romanised' : 'A/文 Original'}
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -193,10 +205,10 @@ export default function LyricsScreen() {
         </TouchableOpacity>
       </View>
 
-      {fetchingLyrics ? (
+      {fetchingLyrics && (!lyricsData || lyricsData.length === 0) ? (
         <View style={styles.centerVoid}>
           <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Fetching & Translating...</Text>
+          <Text style={styles.loadingText}>Connecting to Audio Stream...</Text>
         </View>
       ) : (
         <ScrollView 
@@ -215,11 +227,11 @@ export default function LyricsScreen() {
                 }}
               >
                 <Text style={[styles.originalLine, isActive ? styles.textFull : styles.textDim]}>
-                  {line.tr}
+                  {isRomanized && line.r ? line.r : line.o}
                 </Text>
                 {line.tr && (
                   <Text style={[styles.translationLine, isActive ? styles.textDim : styles.textUltraDim]}>
-                    {line.o}
+                    {line.tr}
                   </Text>
                 )}
               </View>
@@ -233,7 +245,7 @@ export default function LyricsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  headerRow: { paddingTop: 30, paddingHorizontal: 16, paddingBottom: 12 },
+  headerRow: { paddingTop: 30, paddingHorizontal: 16, paddingBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   backButton: { paddingVertical: 8 },
   backButtonText: { color: COLORS.textInactive, fontSize: 16, fontWeight: '600' },
   trackCard: { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: COLORS.border, backgroundColor: COLORS.surface },

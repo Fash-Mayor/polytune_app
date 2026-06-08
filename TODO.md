@@ -1,12 +1,13 @@
 ## TODO
 1. Speed (make the edge function faster):
-    - Gemini Model fallback for translation (for when quota is exceeded)
-    - LRCLIB fallback for lyrics search (for when LRCLIB doesn't have the requested lyrics)
+    - Gemini Model fallback for translation (for when quota is exceeded)(llama-3.3-70b-versatile✅)
+    - LRCLIB fallback for lyrics search (for when LRCLIB doesn't have the requested lyrics)(Ovh✅)
 2. Whole app navigation (including Feedback page)✅
-3. UI (Including Native look) (✅)
-4. Better error handling in the edge function code (so we can know xactly what happens when sum doesn't work)
-5. Since Gro1 is faster it should be the first POC and Gemini the fallback (is it more accurate than 2.5 Flash?)
-6. Adding romaji (that's how other languages will be added too)
+3. UI (Including Native look)
+4. Better error handling in the edge function code (so we can know exactly what happens when sum doesn't work)✅
+5. Since Groq is faster it should be the first POC and Gemini the fallback (is it more accurate than 2.5 Flash?)✅
+6. Adding romaji (that's how other languages will be added too)✅
+7. Gemini Alt (DeepL?)
 
 ## B4 Public
 1. Add app analytics before going public
