@@ -1,59 +1,90 @@
-import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
-import { COLORS, SPACING } from '../../constants/theme';
-import { useState } from 'react';
+import { View, Text, TouchableOpacity, TextInput } from "react-native";
+import { useState } from "react";
 
 export default function FeedbackScreen() {
-  const [type, setType] = useState<'bug' | 'translation'>('bug');
+  const [type, setType] = useState<"bug" | "translation">("bug");
 
   const SubmitFeedback = async () => {
-    alert("Lol, your submission no dey go anywhere💀. Jk, Implementing Feedback soon🚀");
-  }
+    alert(
+      "Lol, your submission no dey go anywhere💀. Jk, Implementing Feedback soon🚀",
+    );
+  };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Your feedback helps us provide a better experience. Please let us know if you encountered a bug or if you have suggestions for a better translation.</Text>
-
-      <Text style={styles.label}>FEEDBACK TYPE</Text>
-      <View style={styles.toggleRow}>
-        <TouchableOpacity 
-          style={[styles.toggleBtn, type === 'bug' && styles.toggleActive]}
-          onPress={() => setType('bug')}
-        >
-          <Text style={[styles.toggleText, type === 'bug' && styles.textActive]}>🐛 Report a Bug</Text>
+    <View className="flex-1 bg-black px-7">
+      <View>
+        <TouchableOpacity className="py-2">
+          <Text className="text-[26px] font-bold text-[#1DB954]">
+            Help Improve LyricsMine
+          </Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.toggleBtn, type === 'translation' && styles.toggleActive]}
-          onPress={() => setType('translation')}
+      </View>
+      <Text className="pt-4 text-base leading-6 text-[#A7A7A7]">
+        Your feedback helps us provide a better experience. Please let us know
+        if you encountered a bug or if you have suggestions for a better
+        translation.
+      </Text>
+
+      <Text className="mb-2 mt-8 text-sm font-bold tracking-[1px] text-[#1DB954]">
+        FEEDBACK TYPE
+      </Text>
+      <View className="mb-6 flex-row gap-3">
+        <TouchableOpacity
+          className={[
+            "flex-1 items-center rounded-lg border p-4",
+            type === "bug"
+              ? "border-[#1DB954] bg-[#121212]"
+              : "border-[#A7A7A7] bg-[#121212]",
+          ].join(" ")}
+          onPress={() => setType("bug")}
         >
-          <Text style={[styles.toggleText, type === 'translation' && styles.textActive]}>A/文 Suggest Translation</Text>
+          <Text
+            className={
+              type === "bug"
+                ? "font-semibold text-[#1DB954]"
+                : "font-semibold text-[#A7A7A7]"
+            }
+          >
+            🐛 Report a Bug
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          className={[
+            "flex-1 items-center rounded-lg border p-4",
+            type === "translation"
+              ? "border-[#1DB954] bg-[#121212]"
+              : "border-[#A7A7A7] bg-[#121212]",
+          ].join(" ")}
+          onPress={() => setType("translation")}
+        >
+          <Text
+            className={
+              type === "translation"
+                ? "font-semibold text-[#1DB954]"
+                : "font-semibold text-[#A7A7A7]"
+            }
+          >
+            A/文 Suggest Translation
+          </Text>
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.label}>DETAILS</Text>
-      <TextInput 
-        style={styles.input}
+      <Text className="mb-2 text-sm font-bold tracking-[1px] text-[#1DB954]">
+        DETAILS
+      </Text>
+      <TextInput
+        className="flex-1 rounded-lg border border-[#1DB954] bg-[#121212] p-4 text-base text-[#1DB954]"
         multiline
         placeholder="Please describe the issue or provide your suggested translation here..."
-        placeholderTextColor={COLORS.textInactive}
+        placeholderTextColor="#A7A7A7"
       />
 
-      <TouchableOpacity style={styles.submitBtn} onPress={SubmitFeedback}>
-        <Text style={styles.submitBtnText}>Submit Feedback</Text>
+      <TouchableOpacity
+        className="mt-6 items-center rounded-full bg-[#1DB954] p-4"
+        onPress={SubmitFeedback}
+      >
+        <Text className="text-base font-bold text-black">Submit Feedback</Text>
       </TouchableOpacity>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background, padding: SPACING.margin },
-  header: { color: COLORS.textInactive, fontSize: 16, marginBottom: 32, lineHeight: 24, paddingTop: 30 },
-  label: { color: COLORS.textActive, fontSize: 12, fontWeight: '700', letterSpacing: 1, marginBottom: 8 },
-  toggleRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
-  toggleBtn: { flex: 1, padding: 16, borderRadius: 8, borderWidth: 1, borderColor: COLORS.border, backgroundColor: COLORS.surface, alignItems: 'center' },
-  toggleActive: { borderColor: COLORS.primary },
-  toggleText: { color: COLORS.textInactive, fontWeight: '600' },
-  textActive: { color: COLORS.textActive },
-  input: { flex: 1, backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border, borderRadius: 8, padding: 16, color: COLORS.textActive, textAlignVertical: 'top', fontSize: 16 },
-  submitBtn: { backgroundColor: COLORS.primary, borderRadius: 9999, padding: 16, alignItems: 'center', marginTop: 24 },
-  submitBtnText: { color: '#000000', fontWeight: '700', fontSize: 16 }
-});

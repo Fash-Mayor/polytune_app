@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
   Platform,
@@ -16,10 +15,8 @@ import {
 } from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
-import { COLORS, SPACING } from "../constants/theme";
 import * as SecureStore from "expo-secure-store";
-// import { vexo } from 'vexo-analytics'; 
-
+// import { vexo } from 'vexo-analytics';
 
 // vexo('625efcf7-a3d3-4109-a674-0b3f6fc39c57')
 
@@ -31,8 +28,8 @@ const discovery = {
 };
 
 const CLIENT_ID = process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_ID || "";
-// const redirectUri = "lyricsmine:///";
-const redirectUri = Platform.OS === 'web' ? 'http://127.0.0.1:8081' : 'lyricsmine:///';
+const redirectUri =
+  Platform.OS === "web" ? "http://127.0.0.1:8081" : "lyricsmine:///";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -96,12 +93,12 @@ export default function HomeScreen() {
       );
 
       // 2. Dynamic Storage Vault
-    if (Platform.OS === 'web') {
-      localStorage.setItem("spotify_token", token.accessToken);
-    } else {
-      await SecureStore.setItemAsync("spotify_token", token.accessToken);
-    }
-    //   await SecureStore.setItemAsync("spotify_token", token.accessToken);
+      if (Platform.OS === "web") {
+        localStorage.setItem("spotify_token", token.accessToken);
+      } else {
+        await SecureStore.setItemAsync("spotify_token", token.accessToken);
+      }
+      //   await SecureStore.setItemAsync("spotify_token", token.accessToken);
       setLoading(false);
       router.replace("/(tabs)/lyrics");
     } catch (error) {
@@ -112,66 +109,35 @@ export default function HomeScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.centerVoid}>
-        <Text style={styles.iconPlaceholder}>🎵</Text>
-        <Text style={styles.brandTitle}>LyricsMine</Text>
-        <Text style={styles.subtitle}>
+    <View className="justify-between flex-1 bg-black px-7 py-7">
+      <View className="items-center justify-center flex-1">
+        <Text className="mb-4 text-6xl">🎵</Text>
+        <Text className="mb-2 text-[48px] font-bold text-[#1DB954]">
+          LyricsMine
+        </Text>
+        <Text className="text-base text-[#A7A7A7]">
           Instantly translate your Spotify playback.
         </Text>
       </View>
 
-      <View style={styles.footer}>
+      <View className="items-center pb-10">
         <TouchableOpacity
-          style={styles.primaryButton}
+          className="mb-4 w-full items-center rounded-full bg-[#1DB954] px-8 py-4"
           disabled={!request || loading}
           onPress={() => promptAsync()}
         >
           {loading ? (
             <ActivityIndicator color="#000000" />
           ) : (
-            <Text style={styles.buttonText}>🎧 Connect Spotify</Text>
+            <Text className="text-lg font-bold text-black">
+              🎧 Connect Spotify
+            </Text>
           )}
         </TouchableOpacity>
-        <Text style={styles.securityText}>
+        <Text className="text-[10px] font-semibold tracking-[1.5px] text-[#A7A7A7]">
           SECURE CONNECTION VIA SPOTIFY API
         </Text>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-    padding: SPACING.margin,
-    justifyContent: "space-between",
-  },
-  centerVoid: { flex: 1, justifyContent: "center", alignItems: "center" },
-  iconPlaceholder: { fontSize: 64, marginBottom: 16 },
-  brandTitle: {
-    fontSize: 48,
-    fontWeight: "700",
-    color: COLORS.textActive,
-    marginBottom: 8,
-  },
-  subtitle: { fontSize: 16, color: COLORS.textInactive },
-  footer: { paddingBottom: 40, alignItems: "center" },
-  primaryButton: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 9999,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    width: "100%",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  buttonText: { color: "#000000", fontSize: 18, fontWeight: "700" },
-  securityText: {
-    fontSize: 10,
-    color: COLORS.textInactive,
-    letterSpacing: 1.5,
-    fontWeight: "600",
-  },
-});

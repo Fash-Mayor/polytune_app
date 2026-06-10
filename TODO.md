@@ -1,16 +1,36 @@
 ## TODO
-1. Speed (make the edge function faster):
+- Record Demo
+- UIing using Copilot and Design.md (Including Native look) - CHANGE TO TAILWIND - CHANGE LYRICS APPEARING FORMAT/POSITIONING
+- The "a text Node cannot be a child of <view>" error.
+- Gemini Alt (DeepL?)
+- Add app analytics (Vexo)
+- Speed (make the edge function faster):
     - Gemini Model fallback for translation (for when quota is exceeded)(llama-3.3-70b-versatile✅)
     - LRCLIB fallback for lyrics search (for when LRCLIB doesn't have the requested lyrics)(Ovh✅)
-2. Whole app navigation (including Feedback page)✅
-3. UI (Including Native look)
-4. Better error handling in the edge function code (so we can know exactly what happens when sum doesn't work)✅
-5. Since Groq is faster it should be the first POC and Gemini the fallback (is it more accurate than 2.5 Flash?)✅
-6. Adding romaji (that's how other languages will be added too)✅
-7. Gemini Alt (DeepL?)
+- Whole app navigation (including Feedback page)✅
+- Better error handling in the edge function code (so we can know exactly what happens when sum doesn't work)✅
+- Since Groq is faster it should be the first POC and Gemini the fallback (is it more accurate than 2.5 Flash?)✅
+- Adding romaji (that's how other languages will be added too)✅
+
+
+## PIVOT I:
+### The Execution Plan
+We need to execute this refactor in three distinct phases so we don't break the app:
+
+**Phase 1:** The Purge. We delete all the expo-auth-session and secure vault code. We strip the app down to just the UI and the streaming engine.
+
+**Phase 2:** The Native Bridge. We initialize a local Expo module and write the Kotlin service to intercept the Android media intents.
+
+**Phase 3:** The Reconnection. We link the new native data stream directly into your fetchLyricsStream function.
+
+eas build --profile preview --platform android
+eas update --branch main --message "message"
 
 ## B4 Public
 1. Add app analytics before going public
+
+## Ato de
+ - Maybe I'll put my app in ProductHunt..?
 
 ## How to Protect & Scale
 

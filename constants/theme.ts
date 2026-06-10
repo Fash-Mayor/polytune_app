@@ -10,6 +10,6 @@ export const COLORS = {
 // Fluid Grid Spacing Unit
 export const SPACING = {
   base: 8,
-  margin: 24,
+  margin: 28,
   lyricGap: 32,
 };

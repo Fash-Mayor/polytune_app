@@ -1,37 +1,48 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator, Dimensions, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
-import { COLORS, SPACING } from '../../constants/theme';
-import * as SecureStore from 'expo-secure-store';
-import EventSource from 'react-native-sse'; // The Native Android/iOS streaming fix
+import React, { useState, useEffect, useRef } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+  Dimensions,
+  Platform,
+} from "react-native";
+import { useRouter } from "expo-router";
+import * as SecureStore from "expo-secure-store";
+import EventSource from "react-native-sse"; // The Native Android/iOS streaming fix
 
-const SUPABASE_FUNCTION_URL = process.env.EXPO_PUBLIC_SUPABASE_FUNCTION_URL || '';
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const SUPABASE_FUNCTION_URL =
+  process.env.EXPO_PUBLIC_SUPABASE_FUNCTION_URL || "";
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function LyricsScreen() {
   const router = useRouter();
 
   const [token, setToken] = useState<string | null>(null);
   const [currentTrack, setCurrentTrack] = useState<any>(null);
-  const [lyricsData, setLyricsData] = useState<{o: string, r: string, tr: string, timeMs: number}[] | null>(null);
+  const [lyricsData, setLyricsData] = useState<
+    { o: string; r: string; tr: string; timeMs: number }[] | null
+  >(null);
   const [fetchingLyrics, setFetchingLyrics] = useState<boolean>(false);
-  const [isRomanized, setIsRomanized] = useState<boolean>(false); 
+  const [isRomanized, setIsRomanized] = useState<boolean>(false);
   const [playbackPosition, setPlaybackPosition] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
   const scrollViewRef = useRef<ScrollView>(null);
   const lyricPositions = useRef<{ [key: number]: number }>({});
-  
+
   // Track the active SSE connection so we can cancel it if the user skips a song midway
-  const activeEventSource = useRef<EventSource | null>(null); 
+  const activeEventSource = useRef<EventSource | null>(null);
 
   useEffect(() => {
     const loadToken = async () => {
       let savedToken = null;
-      if (Platform.OS === 'web') {
-        savedToken = localStorage.getItem('spotify_token');
+      if (Platform.OS === "web") {
+        savedToken = localStorage.getItem("spotify_token");
       } else {
-        savedToken = await SecureStore.getItemAsync('spotify_token');
+        savedToken = await SecureStore.getItemAsync("spotify_token");
       }
       if (savedToken) setToken(savedToken);
       else alert("Security Error: No access token found.");
@@ -45,12 +56,16 @@ export default function LyricsScreen() {
     }
 
     setFetchingLyrics(true);
-    setLyricsData([]); 
+    setLyricsData([]);
 
     const es = new EventSource(SUPABASE_FUNCTION_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ trackTitle: title, artistName: artist, spotifyId: id })
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        trackTitle: title,
+        artistName: artist,
+        spotifyId: id,
+      }),
     });
 
     activeEventSource.current = es;
@@ -71,14 +86,21 @@ export default function LyricsScreen() {
         if (data.item) {
           // As soon as the first line arrives, hide the loading spinner
           setFetchingLyrics(false);
-          
+
           setLyricsData((prev) => {
             const currentList = prev || [];
             // Prevent duplicate line rendering
-            if (currentList.some((line) => line.timeMs === data.item.timeMs && line.o === data.item.o)) {
+            if (
+              currentList.some(
+                (line) =>
+                  line.timeMs === data.item.timeMs && line.o === data.item.o,
+              )
+            ) {
               return currentList;
             }
-            return [...currentList, data.item].sort((a, b) => a.timeMs - b.timeMs);
+            return [...currentList, data.item].sort(
+              (a, b) => a.timeMs - b.timeMs,
+            );
           });
         }
 
@@ -88,6 +110,7 @@ export default function LyricsScreen() {
         }
       } catch (e) {
         console.error("Error parsing SSE data:", e);
+        alert("An error occurred while receiving lyrics data." + e);
       }
     });
 
@@ -103,12 +126,15 @@ export default function LyricsScreen() {
       alert("Authentication failed: Loading token from vault.");
       return;
     }
-    
+
     try {
-      const res = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      
+      const res = await fetch(
+        "https://api.spotify.com/v1/me/player/currently-playing",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
       if (res.status === 200) {
         const data = await res.json();
         setCurrentTrack(data.item);
@@ -116,20 +142,27 @@ export default function LyricsScreen() {
         setIsPlaying(data.is_playing);
 
         if (!lyricsData || currentTrack?.id !== data.item.id) {
-            fetchLyricsStream(data.item.name, data.item.artists[0].name, data.item.id);
+          fetchLyricsStream(
+            data.item.name,
+            data.item.artists[0].name,
+            data.item.id,
+          );
         }
       } else if (res.status === 204) {
-        alert("Spotify connected, but nothing playing!");
+        alert("Spotify is connected, but nothing is playing!");
+      } else if (res.status === 401) {
+        alert("Unauthorized, Reconnect Spotify.");
       }
     } catch (error) {
       console.error("Spotify API Error:", error);
+      alert("Failed to fetch currently playing track." + error);
     }
   };
 
   useEffect(() => {
     if (!isPlaying) return;
     const interval = setInterval(() => {
-      setPlaybackPosition((prev) => prev + 500); 
+      setPlaybackPosition((prev) => prev + 500);
     }, 500);
     return () => clearInterval(interval);
   }, [isPlaying]);
@@ -145,10 +178,13 @@ export default function LyricsScreen() {
   const activeIndex = getActiveIndex();
 
   useEffect(() => {
-    if (activeIndex !== -1 && lyricPositions.current[activeIndex] !== undefined) {
+    if (
+      activeIndex !== -1 &&
+      lyricPositions.current[activeIndex] !== undefined
+    ) {
       const targetY = lyricPositions.current[activeIndex];
-      const centerOffset = (SCREEN_HEIGHT / 2) - 250; 
-      
+      const centerOffset = SCREEN_HEIGHT / 2 - 250;
+
       scrollViewRef.current?.scrollTo({
         y: Math.max(0, targetY - centerOffset),
         animated: true,
@@ -157,111 +193,131 @@ export default function LyricsScreen() {
   }, [activeIndex]);
 
   const handleDisconnect = async () => {
-    if (Platform.OS === 'web') localStorage.removeItem('spotify_token');
-    else await SecureStore.deleteItemAsync('spotify_token');
-    
+    if (Platform.OS === "web") localStorage.removeItem("spotify_token");
+    else await SecureStore.deleteItemAsync("spotify_token");
+
     setToken(null);
     setCurrentTrack(null);
     setLyricsData(null);
     if (activeEventSource.current) activeEventSource.current.close();
-    router.replace('/');
+    router.replace("/");
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.headerRow}>
-        <TouchableOpacity onPress={handleDisconnect} style={styles.backButton}>
-          <Text style={styles.backButtonText}>Disconnect</Text>
+    <View className="flex-1 bg-black">
+      <View className="flex-row items-center justify-between px-4 pt-8 pb-3">
+        <TouchableOpacity onPress={handleDisconnect} className="py-1">
+          <Text className="text-base font-semibold text-[#A7A7A7]">
+            Disconnect
+          </Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity 
-          onPress={() => setIsRomanized(!isRomanized)} 
-          style={[styles.ghostButton, isRomanized && { borderColor: COLORS.primary }]}
+
+        <TouchableOpacity
+          onPress={() => setIsRomanized(!isRomanized)}
+          className={[
+            "rounded-full border border-[#1DB954] px-3 py-2",
+            isRomanized ? "border-[#1DB954]" : "border-[#1DB954]",
+          ].join(" ")}
         >
-          <Text style={[styles.ghostButtonText, isRomanized && { color: COLORS.primary, fontWeight: '700' }]}>
-            {isRomanized ? 'A/文 Romanised' : 'A/文 Original'}
+          <Text
+            className={
+              isRomanized
+                ? "text-xs font-bold text-[#1DB954]"
+                : "text-xs text-[#1DB954]"
+            }
+          >
+            {isRomanized ? "A/文 Romanised" : "A/文 Original"}
           </Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.trackCard}>
+      <View className="flex-row items-center border-b border-[#1DB954] bg-[#121212] p-4">
         {currentTrack ? (
           <>
-            <Image source={{ uri: currentTrack.album.images[0]?.url }} style={styles.albumArt} />
-            <View style={styles.trackMeta}>
-              <Text style={styles.trackTitle}>{currentTrack.name}</Text>
-              <Text style={styles.artistName}>{currentTrack.artists[0]?.name}</Text>
+            <Image
+              source={{ uri: currentTrack.album.images[0]?.url }}
+              className="w-12 h-12 mr-3 rounded-lg"
+            />
+            <View className="flex-1">
+              <Text className="text-base font-bold text-[#1DB954]">
+                {currentTrack.name}
+              </Text>
+              <Text className="text-sm text-[#A7A7A7]">
+                {currentTrack.artists[0]?.name}
+              </Text>
             </View>
           </>
         ) : (
-          <View style={styles.trackMeta}>
-            <Text style={styles.trackTitle}>Ready to Sync</Text>
-            <Text style={styles.artistName}>Play a track on Spotify</Text>
+          <View className="flex-1">
+            <Text className="text-base font-bold text-[#1DB954]">
+              Ready to Sync
+            </Text>
+            <Text className="text-sm text-[#A7A7A7]">
+              Play a track on Spotify
+            </Text>
           </View>
         )}
-        
-        <TouchableOpacity style={styles.ghostButton} onPress={fetchCurrentlyPlaying}>
-          <Text style={styles.ghostButtonText}>Sync Playback</Text>
+
+        <TouchableOpacity
+          className="rounded-full border border-[#1DB954] px-3 py-2"
+          onPress={fetchCurrentlyPlaying}
+        >
+          <Text className="text-xs text-[#1DB954]">Sync Playback</Text>
         </TouchableOpacity>
       </View>
 
       {fetchingLyrics && (!lyricsData || lyricsData.length === 0) ? (
-        <View style={styles.centerVoid}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Connecting to Audio Stream...</Text>
+        <View className="items-center justify-center flex-1">
+          <ActivityIndicator size="large" color="#1DB954" />
+          <Text className="mt-4 text-sm italic text-[#A7A7A7]">
+            Connecting to Audio Stream...
+          </Text>
         </View>
       ) : (
-        <ScrollView 
+        <ScrollView
           ref={scrollViewRef}
-          contentContainerStyle={styles.lyricScroll}
+          contentContainerStyle={{
+            padding: 28,
+            paddingBottom: SCREEN_HEIGHT / 2,
+          }}
           showsVerticalScrollIndicator={false}
         >
-          {lyricsData && lyricsData.map((line, index) => {
-            const isActive = index === activeIndex;
-            return (
-              <View 
-                key={index} 
-                style={styles.lyricBlock}
-                onLayout={(event) => {
-                  lyricPositions.current[index] = event.nativeEvent.layout.y;
-                }}
-              >
-                <Text style={[styles.originalLine, isActive ? styles.textFull : styles.textDim]}>
-                  {isRomanized && line.r ? line.r : line.o}
-                </Text>
-                {line.tr && (
-                  <Text style={[styles.translationLine, isActive ? styles.textDim : styles.textUltraDim]}>
-                    {line.tr}
+          {lyricsData &&
+            lyricsData.map((line, index) => {
+              const isActive = index === activeIndex;
+              return (
+                <View
+                  key={index}
+                  className="mb-8"
+                  onLayout={(event) => {
+                    lyricPositions.current[index] = event.nativeEvent.layout.y;
+                  }}
+                >
+                  <Text
+                    className={
+                      isActive
+                        ? "text-[28px] font-bold text-[#1DB954] opacity-100"
+                        : "text-[28px] font-bold text-[#A7A7A7] opacity-50"
+                    }
+                  >
+                    {isRomanized && line.r ? line.r : line.o}
                   </Text>
-                )}
-              </View>
-            );
-          })}
+                  {line.tr && (
+                    <Text
+                      className={
+                        isActive
+                          ? "text-[23px] font-semibold text-[#ffffff] opacity-100"
+                          : "text-[23px] font-semibold text-[#A7A7A7] opacity-40"
+                      }
+                    >
+                      {line.tr}
+                    </Text>
+                  )}
+                </View>
+              );
+            })}
         </ScrollView>
       )}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  headerRow: { paddingTop: 30, paddingHorizontal: 16, paddingBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  backButton: { paddingVertical: 8 },
-  backButtonText: { color: COLORS.textInactive, fontSize: 16, fontWeight: '600' },
-  trackCard: { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: COLORS.border, backgroundColor: COLORS.surface },
-  albumArt: { width: 48, height: 48, borderRadius: 8, marginRight: 12 },
-  trackMeta: { flex: 1 },
-  trackTitle: { color: COLORS.textActive, fontSize: 16, fontWeight: '700' },
-  artistName: { color: COLORS.textInactive, fontSize: 14 },
-  ghostButton: { borderWidth: 1, borderColor: COLORS.border, borderRadius: 9999, paddingVertical: 8, paddingHorizontal: 12 },
-  ghostButtonText: { color: COLORS.textActive, fontSize: 12 },
-  centerVoid: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  loadingText: { color: COLORS.textInactive, marginTop: 16, fontSize: 14, fontStyle: 'italic' },
-  lyricScroll: { padding: SPACING.margin, paddingBottom: SCREEN_HEIGHT / 2 }, 
-  lyricBlock: { marginBottom: SPACING.lyricGap },
-  originalLine: { fontSize: 28, fontWeight: '700', marginBottom: 4 },
-  translationLine: { fontSize: 18, fontWeight: '400' },
-  textFull: { color: COLORS.textActive, opacity: 1 },
-  textDim: { color: COLORS.textInactive, opacity: 0.8 },
-  textUltraDim: { color: COLORS.textInactive, opacity: 0.4 }
-});
