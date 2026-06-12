@@ -42,6 +42,15 @@
         "foregroundImage": "./assets/NuMain.png",
         "monochromeImage": "./assets/NuMain.png"
       },
+      "splash": {
+        "backgroundColor": "#000000",
+        "image": "./assets/Numain.png",
+        "resizeMode": "contain",
+        "dark": {
+          "backgroundColor": "#000000",
+          "image": "./assets/Numain.png"
+        }
+      },
       "notificationIcon": "./assets/android-icon-192x192.png",
       "package": "com.fashmayor.lyricsmine",
       "predictiveBackGestureEnabled": false

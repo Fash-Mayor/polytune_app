@@ -1,7 +1,7 @@
 ## TODO
 - Record Demo
 - UIing using Copilot and Design.md (Including Native look) - CHANGE TO TAILWIND - CHANGE LYRICS APPEARING FORMAT/POSITIONING
-- The "a text Node cannot be a child of <view>" error.
+- The "a text Node cannot be a child of <view>" error.✅
 - Gemini Alt (DeepL?)
 - Add app analytics (Vexo)
 - Speed (make the edge function faster):

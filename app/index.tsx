@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Platform,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
 import {
@@ -111,7 +112,7 @@ export default function HomeScreen() {
   return (
     <View className="justify-between flex-1 bg-black px-7 py-7">
       <View className="items-center justify-center flex-1">
-        <Text className="mb-4 text-6xl">🎵</Text>
+        <Image source={require("../assets/NuMain.png")} className="w-32 h-32" />
         <Text className="mb-2 text-[48px] font-bold text-[#1DB954]">
           LyricsMine
         </Text>
