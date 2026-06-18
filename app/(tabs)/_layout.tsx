@@ -1,20 +1,21 @@
 import { Tabs } from "expo-router";
 import { FontAwesome } from "@expo/vector-icons";
+import { COLORS } from "../../constants/theme";
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: false, // Hides the top header so your custom UI shows
+        headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#121212",
-          borderTopColor: "#1DB954",
+          backgroundColor: COLORS.surface,
+          borderTopColor: COLORS.border,
           borderTopWidth: 1,
           height: 70,
           paddingBottom: 15,
         },
-        tabBarActiveTintColor: "#1DB954",
-        tabBarInactiveTintColor: "#A7A7A7",
+        tabBarActiveTintColor: COLORS.primary,
+        tabBarInactiveTintColor: COLORS.textInactive,
       }}
     >
       <Tabs.Screen

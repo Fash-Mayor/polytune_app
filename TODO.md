@@ -1,9 +1,12 @@
 ## TODO
-- Record Demo
-- UIing using Copilot and Design.md (Including Native look) - CHANGE TO TAILWIND - CHANGE LYRICS APPEARING FORMAT/POSITIONING
-- The "a text Node cannot be a child of <view>" error.✅
-- Gemini Alt (DeepL?)
 - Add app analytics (Vexo)
+- make edgr function faster
+- UI upgrade
+- Prmission requesting for is too much, reduce it.(will prolly have to remove the pausing)
+- Record Demo✅
+- UIing using Copilot and Design.md (Including Native look) - CHANGE TO TAILWIND - CHANGE LYRICS APPEARING FORMAT/POSITIONING✅
+- The "a text Node cannot be a child of <view>" error.✅
+- Gemini Alt (DeepL?)✅
 - Speed (make the edge function faster):
     - Gemini Model fallback for translation (for when quota is exceeded)(llama-3.3-70b-versatile✅)
     - LRCLIB fallback for lyrics search (for when LRCLIB doesn't have the requested lyrics)(Ovh✅)
@@ -18,13 +21,13 @@
 We need to execute this refactor in three distinct phases so we don't break the app:
 
 **Phase 1:** The Purge. We delete all the expo-auth-session and secure vault code. We strip the app down to just the UI and the streaming engine.
-
 **Phase 2:** The Native Bridge. We initialize a local Expo module and write the Kotlin service to intercept the Android media intents.
-
 **Phase 3:** The Reconnection. We link the new native data stream directly into your fetchLyricsStream function.
 
 eas build --profile preview --platform android
 eas update --branch main --message "message"
+npx expo run:android --variant release
+
 
 ## B4 Public
 1. Add app analytics before going public
@@ -116,3 +119,41 @@ Mayor, you don't need venture capital for this. You have the full-stack capabili
 4. **Launch it on the Play Store** targeting international music spaces (Anime, K-Pop, and Reggaeton communities).
 
 This shifts LyricsMine from a vulnerable platform-dependent wrapper into an independent, legally shielded, utility engine capable of scaling to millions of devices. Let's get to work on whatever layer you want to refactor first.
+
+
+
+
+
+
+
+
+
+
+
+Act as a world-class React Native and Expo expert. We are updating our app, LyricsMine. 
+Context of our architecture: 
+- We are NOT using the Spotify API anymore. The app listens to the OS media session (via a custom Android/iOS native module or system notification listener) to get the current track title and artist.
+- The system media listener provides: `title`, `artist`, `albumArt`, `isPlaying` , and `playbackPosition` (current elapsed time of the song in milliseconds), i believe.
+- The lyrics, translations, and romanizations are being streamed in real-time from a Supabase Edge Function as an Event-Stream (SSE), which already provides a `timeMs` field for each line. modify my app to incorporate the following production-grade features:
+1. ALBUM ARTWORK DISPLAY:
+- Update the UI to show the current song's album artwork. Ensure it has a fallback placeholder image if the system hasn't provided the `albumArt` yet.
+2. OS PLAYBACK CONTROLS (PAUSE/PLAY):
+- Add a beautiful floating or fixed Play/Pause toggle button in the UI. 
+- When pressed, it should invoke a native command placeholder function (e.g., `NativeMediaController.togglePlayback()`) so that we can pass the pause/play action back to the OS to control the background music player.
+3. RE-SYNC BUTTON:
+- Implement a floating "Re-sync" or "Sync" button (use a subtle icon like a refresh/clock combo from vector icons).
+- When pressed, it should explicitly trigger a placeholder function `fetchCurrentOSPlaybackPosition()` to pull the exact ground-truth timestamp from the system and snap our local `playbackPosition` state straight to it to fix any drift.
+4. HIGH-PERFORMANCE TIMECODE SYNC LOOP:
+- Implement a `useEffect` driven timer loop (using `requestAnimationFrame` or a highly efficient 100ms interval tracker) that smoothly increments the local `playbackPosition` state by elapsed time, but ONLY when `isPlaying` is true.
+- As `playbackPosition` updates, calculate the `activeIndex` of the lyric line by finding the line where `playbackPosition >= line.timeMs` (getting the closest match without going over).
+- Ensure the custom ScrollView automatically scrolls smoothly to center the active lyric line using `scrollViewRef.current.scrollTo`. Optimize this to prevent layout thrashing or stuttering.
+I would recommend you maintain the existing the `EventSource` streaming logic for fetching new lyrics so you don't break things but if you have to modify them, still don't break anything. Keep the code clean, modular, and optimized to handle massive payload files without breaking the JS thread.
+
+After update: 
+- lyrics is sometimes not time syncing (it only synced for sometimes for some songs)(don't forget that the re-sync button is to re-sync the time-coded lyrics and the time-code of the song playing to remove any lag and to also force the app to pick up the song playing in the background if it's not picking it up and also to refetch the lyrics from the db, i.e trigger the edge function again)
+- the pause button doesn't work
+- image is not showing
+
+- I want the function to stop adding the time to the end of the lyrics taht it's sending to the frontend, I see things like [3:16:05] in some lines and mostly at the end of the translated lyrics. I know the time code is added, but I don't want it to be showing in the frontend in the lyrics. (Is it Gemini and/or Llama that is generating the time code?)
+- once the two apis miss it should tell the frontend immidiately (it takes a couple of secs before th forntend gets the message and displays it) 
+## Might ned to modify the prompt given to gem and llama (cultural and deep meaning can be pro)

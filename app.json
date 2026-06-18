@@ -16,7 +16,6 @@
     "plugins": [
       "expo-router",
       "expo-status-bar",
-      "expo-secure-store",
       "expo-splash-screen"
     ],
     "extra": {
@@ -44,14 +43,14 @@
       },
       "splash": {
         "backgroundColor": "#000000",
-        "image": "./assets/Numain.png",
+        "image": "./assets/NuMain.png",
         "resizeMode": "contain",
         "dark": {
           "backgroundColor": "#000000",
-          "image": "./assets/Numain.png"
+          "image": "./assets/NuMain.png"
         }
       },
-      "notificationIcon": "./assets/android-icon-192x192.png",
+      "notificationIcon": "./assets/NuMain.png",
       "package": "com.fashmayor.lyricsmine",
       "predictiveBackGestureEnabled": false
     }
