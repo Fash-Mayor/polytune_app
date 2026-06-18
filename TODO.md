@@ -1,5 +1,6 @@
 ## TODO
-- Add app analytics (Vexo)
+- add sum to tell them that my notif request isn't actually taking anything
+- Add app analytics (Vexo), privacy policy and (T&C?)
 - make edgr function faster
 - UI upgrade
 - Prmission requesting for is too much, reduce it.(will prolly have to remove the pausing)
