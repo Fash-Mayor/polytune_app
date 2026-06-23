@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert, Text, TouchableOpacity, View } from "react-na
 import { LyricsList } from "../../components/LyricsList";
 import { NowPlayingBar } from "../../components/NowPlayingBar";
 import { PlaybackControls } from "../../components/PlaybackControls";
+import { PrivacyPermissionModal } from "../../components/PrivacyPermissionModal";
 import { COLORS } from "../../constants/theme";
 import { useLyricsStream } from "../../hooks/useLyricsStream";
 import { useMediaSession } from "../../hooks/useMediaSession";
@@ -15,6 +16,7 @@ import {
 export default function LyricsScreen() {
   const [isRomanized, setIsRomanized] = useState(false);
   const [resyncing, setResyncing] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
   const { track, isPlaying, osPositionMs, refresh } = useMediaSession();
   const trackKey = track ? `${track.title}::${track.artist}` : null;
@@ -35,17 +37,8 @@ export default function LyricsScreen() {
     try {
       const hasAccess = await isNotificationAccessEnabled();
       if (!hasAccess) {
-        Alert.alert(
-          "Enable media access",
-          "For accurate time sync, album art, and play/pause controls, allow LyricsMine notification access in the next screen.",
-          [
-            { text: "Not now", style: "cancel" },
-            {
-              text: "Open settings",
-              onPress: () => openNotificationAccessSettings(),
-            },
-          ],
-        );
+        setShowPrivacyModal(true);
+        return; // Wait for modal action
       }
 
       await refresh();
@@ -56,18 +49,23 @@ export default function LyricsScreen() {
     }
   };
 
+  const handleConfirmPrivacy = async () => {
+    setShowPrivacyModal(false);
+    await openNotificationAccessSettings();
+  };
+
   const showLoading =
     fetchingLyrics && (!lyricsData || lyricsData.length === 0);
 
   return (
     <View className="flex-1" style={{ backgroundColor: COLORS.background }}>
-      <View className="flex-row items-center justify-between px-4 pb-3 pt-8">
+      <View className="flex-row items-center justify-between px-4 pt-8 pb-3">
         <Text className="text-base font-bold" style={{ color: COLORS.primary }}>
           LyricsMine Live
         </Text>
         <TouchableOpacity
           onPress={() => setIsRomanized((prev) => !prev)}
-          className="rounded-full border px-3 py-2"
+          className="px-3 py-2 border rounded-full"
           style={{ borderColor: COLORS.border }}
         >
           <Text className="text-xs font-bold" style={{ color: COLORS.primary }}>
@@ -79,7 +77,7 @@ export default function LyricsScreen() {
       <NowPlayingBar track={track} />
 
       {showLoading ? (
-        <View className="flex-1 items-center justify-center">
+        <View className="items-center justify-center flex-1">
           <ActivityIndicator size="large" color={COLORS.primary} />
           <Text
             className="mt-4 text-sm italic"
@@ -95,13 +93,13 @@ export default function LyricsScreen() {
           isRomanized={isRomanized}
         />
       ) : (
-        <View className="flex-1 items-center justify-center px-8">
+        <View className="items-center justify-center flex-1 px-8">
           <Text
-            className="text-center text-base"
+            className="text-base text-center"
             style={{ color: COLORS.textInactive }}
           >
             {track
-              ? "No lyrics found for this track yet. Tap sync to retry."
+              ? "No lyrics found for this track. Tap sync to retry."
               : "Start playing music, or tap sync to detect the current track."}
           </Text>
         </View>
@@ -111,6 +109,11 @@ export default function LyricsScreen() {
         isPlaying={isPlaying}
         onResync={handleResync}
         resyncing={resyncing}
+      />
+      <PrivacyPermissionModal
+        visible={showPrivacyModal}
+        onClose={() => setShowPrivacyModal(false)}
+        onConfirm={handleConfirmPrivacy}
       />
     </View>
   );
