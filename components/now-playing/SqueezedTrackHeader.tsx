@@ -28,7 +28,7 @@ export function SqueezedTrackHeader({
   return (
     <Pressable
       onPress={onPress}
-      className="flex-row items-center border-b border-mine-border bg-mine-bg px-4 py-3"
+      className="flex-row items-center px-4 py-3 border-b border-mine-primary bg-mine-bg"
     >
       <Image
         source={hasArt && track ? { uri: track.albumArt } : PLACEHOLDER_ART}
@@ -36,7 +36,7 @@ export function SqueezedTrackHeader({
         resizeMode="cover"
       />
 
-      <View className="min-w-0 flex-1">
+      <View className="flex-1 min-w-0">
         <Text className="text-sm font-bold text-mine-white" numberOfLines={1}>
           {track?.title ?? "Unknown track"}
         </Text>
@@ -49,7 +49,7 @@ export function SqueezedTrackHeader({
         onPress={onResync}
         disabled={resyncing}
         hitSlop={12}
-        className="ml-2 h-10 w-10 items-center justify-center rounded-full border border-mine-border bg-mine-card"
+        className="items-center justify-center w-10 h-10 ml-2 border rounded-full border-mine-border bg-mine-card"
         accessibilityLabel="Re-sync lyrics"
       >
         {resyncing ? (

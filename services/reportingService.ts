@@ -42,5 +42,21 @@ export const ReportingService = {
       console.error("[REPORTING SERVICE ERROR]", error.message);
       throw error; 
     }
+  },
+
+  async reportBug(details: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from("reported_bugs")
+        .insert([
+          {
+            bug_description: `feedback-bug-report: ${details}`,
+          },
+        ]);
+      if (error) throw new Error(`Failed to log bug: ${error.message}`);
+    } catch (error: any) {
+      console.error("[REPORTING SERVICE ERROR]", error.message);
+      throw error;
+    }
   }
 };

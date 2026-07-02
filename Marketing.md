@@ -61,3 +61,4 @@ override fun onNotificationPosted(sbn: StatusBarNotification?) {
 
 VIDZ:
 - BOOMBAYAH - Launch day vid
+- PBUY - targeting negros that lik afro

@@ -8,14 +8,14 @@
 - image should update instantly (like the title and artist do)✅
 - lyrics 're kinda lagging (just a bit)(remove the animation) opt2 remove animated:true -> animated:false✅
 - the app re-launches when I minimise and go to another app and come back✅
-- might need to add a splash screen  ~⛏
+- might need to add a splash screen ~⛏
 - font ~⛏
 - Rebranding 
-- UI upgrade
-- feedback page also adds the feedback to supabase
+- UI upgrade ~⛏
+- feedback page also adds the feedback to supabase ~⛏
 - make ui redering .tsx files light
 - OTA updates check
--->>flame, come play
+-->>
 - Authentication (login should percist)
 - Settings/Profile page (w legals (T&C, PP))
 - Paywall (RevenueCAT)

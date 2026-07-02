@@ -5,10 +5,16 @@ import "../global.css";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from 'react'
+import { AnalyticsService } from "../services/analytics";
 
 SplashScreen.preventAutoHideAsync(); // Prevent the splash screen from auto-hiding
 
 export default function RootLayout() {
+  
+  useEffect(() => {
+    // Initialize Mixpanel analytics when the app starts
+    AnalyticsService.init();
+  }, []);
 
   const [fontsLoaded, fontError] = useFonts({
     // Map the font name you want to use to the actual file

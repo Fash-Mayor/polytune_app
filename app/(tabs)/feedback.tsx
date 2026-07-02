@@ -1,8 +1,9 @@
-import { View, Text, ScrollView, TouchableOpacity, TextInput } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert } from "react-native";
 import { useState } from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { ReportingService } from "../../services/reportingService";
 
 type FeedbackType = "bug" | "translation";
 
@@ -15,8 +16,22 @@ export default function FeedbackScreen() {
   const [artist, setArtist] = useState("");
   const [lyrics, setLyrics] = useState("");
 
-  const submitFeedback = () => {
-    alert("Thanks! Feedback submission will be wired up soon.");
+  const submitFeedback = async () => {
+    if (type === "bug") {
+      if (!details.trim()) {
+        Alert.alert("Error", "Please provide details.");
+        return;
+      }
+      try {
+        await ReportingService.reportBug(details);
+        Alert.alert("Thank You!", "Your bug report has been submitted.");
+        setDetails("");
+      } catch (err: any) {
+        Alert.alert("Submission Error", err.message);
+      }
+    } else {
+      Alert.alert("Not Implemented", "Translation submission is not yet implemented.");
+    }
   };
 
   return (
