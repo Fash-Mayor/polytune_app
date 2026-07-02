@@ -1,28 +1,34 @@
 import { Tabs } from "expo-router";
-import { FontAwesome } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: false, // Hides the top header so your custom UI shows
+        headerShown: false,
         tabBarStyle: {
           backgroundColor: "#121212",
-          borderTopColor: "#1DB954",
+          borderTopColor: "#22C55E",
           borderTopWidth: 1,
-          height: 70,
-          paddingBottom: 15,
+          height: 72,
+          paddingBottom: 10,
+          paddingTop: 8,
         },
-        tabBarActiveTintColor: "#1DB954",
-        tabBarInactiveTintColor: "#A7A7A7",
+        tabBarActiveTintColor: "#22C55E",
+        tabBarInactiveTintColor: "#71717A",
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: "600",
+          marginTop: 2,
+        },
       }}
     >
       <Tabs.Screen
-        name="lyrics"
+        name="index"
         options={{
-          title: "Lyrics",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome name="music" size={20} color={color} />
+          title: "Now Playing",
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="music-circle" size={size + 2} color={color} />
           ),
         }}
       />
@@ -30,8 +36,17 @@ export default function TabLayout() {
         name="feedback"
         options={{
           title: "Feedback",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome name="commenting" size={20} color={color} />
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="message-text-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings/index"
+        options={{
+          title: "Settings",
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="cog-outline" size={size} color={color} />
           ),
         }}
       />

@@ -1,144 +1,126 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ActivityIndicator,
-  Platform,
-  Image,
-} from "react-native";
+import { useEffect, useState } from "react";
+import { AppState, Image, Text, TouchableOpacity, View } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { PrivacyPermissionModal } from "../components/PrivacyPermissionModal";
+import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 import {
-  useAuthRequest,
-  makeRedirectUri,
-  exchangeCodeAsync,
-  TokenResponse,
-} from "expo-auth-session";
-import * as WebBrowser from "expo-web-browser";
-import * as Linking from "expo-linking";
-import * as SecureStore from "expo-secure-store";
-// import { vexo } from 'vexo-analytics';
+  isNotificationAccessEnabled,
+  openNotificationAccessSettings,
+} from "../modules/expo-ambient-listener";
 
-// vexo('625efcf7-a3d3-4109-a674-0b3f6fc39c57')
+const LOGO = require("../assets/PolyTuneLogo.png");
 
-WebBrowser.maybeCompleteAuthSession();
-
-const discovery = {
-  authorizationEndpoint: "https://accounts.spotify.com/authorize",
-  tokenEndpoint: "https://accounts.spotify.com/api/token",
-};
-
-const CLIENT_ID = process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_ID || "";
-const redirectUri =
-  Platform.OS === "web" ? "http://127.0.0.1:8081" : "lyricsmine:///";
-
-export default function HomeScreen() {
+export default function WelcomeScreen() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const insets = useSafeAreaInsets();
+  const { width, height, logoSize, isCompact } = useResponsiveLayout();
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [checking, setChecking] = useState(true);
 
-  const [request, response, promptAsync] = useAuthRequest(
-    {
-      clientId: CLIENT_ID,
-      scopes: ["user-read-currently-playing", "user-read-playback-state"],
-      usePKCE: true,
-      redirectUri: redirectUri,
-    },
-    discovery,
-  );
-
-  // Handle auth response from promptAsync
-  useEffect(() => {
-    if (response?.type === "success" && request?.codeVerifier) {
-      exchangeToken(response.params.code, request.codeVerifier);
+  const goToAppIfPermitted = async () => {
+    const granted = await isNotificationAccessEnabled();
+    if (granted) {
+      router.replace("/(tabs)");
     }
-  }, [response, request]);
-
-  // Handle deep link when app is opened from Spotify redirect
-  useEffect(() => {
-    const subscription = Linking.addEventListener("url", handleDeepLink);
-    return () => subscription.remove();
-  }, [request]);
-
-  const handleDeepLink = async (event: { url: string }) => {
-    const url = event.url;
-    const parsed = Linking.parse(url);
-    const queryParams = parsed.queryParams;
-
-    if (!queryParams) {
-      return;
-    }
-
-    const { code, error } = queryParams as Record<string, string>;
-
-    if (error) {
-      alert(`Auth Error: ${error}`);
-      return;
-    }
-
-    if (code && request?.codeVerifier) {
-      exchangeToken(code, request.codeVerifier);
-    }
+    return granted;
   };
 
-  const exchangeToken = async (code: string, codeVerifier: string) => {
-    setLoading(true);
-    try {
-      const token = await exchangeCodeAsync(
-        {
-          clientId: CLIENT_ID,
-          code: code,
-          redirectUri: redirectUri,
-          extraParams: { code_verifier: codeVerifier },
-        },
-        discovery,
-      );
+  useEffect(() => {
+    goToAppIfPermitted().finally(() => setChecking(false));
+  }, []);
 
-      // 2. Dynamic Storage Vault
-      if (Platform.OS === "web") {
-        localStorage.setItem("spotify_token", token.accessToken);
-      } else {
-        await SecureStore.setItemAsync("spotify_token", token.accessToken);
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        goToAppIfPermitted();
       }
-      //   await SecureStore.setItemAsync("spotify_token", token.accessToken);
-      setLoading(false);
-      router.replace("/(tabs)/lyrics");
-    } catch (error) {
-      console.error("Token exchange failed:", error);
-      alert("Failed to securely exchange token with Spotify.");
-      setLoading(false);
-    }
+    });
+    return () => sub.remove();
+  }, []);
+
+  const handleStartListening = () => {
+    setShowPrivacyModal(true);
   };
+
+  const handleConfirmPrivacy = async () => {
+    setShowPrivacyModal(false);
+    await openNotificationAccessSettings();
+  };
+
+  if (checking) {
+    return <View className="flex-1 bg-mine-bg" />;
+  }
+
+  const glowSize = width * 1.15;
 
   return (
-    <View className="justify-between flex-1 bg-black px-7 py-7">
-      <View className="items-center justify-center flex-1">
-        <Image source={require("../assets/NuMain.png")} className="w-32 h-32" />
-        <Text className="mb-2 text-[48px] font-bold text-[#1DB954]">
-          LyricsMine
+    <View
+      className="flex-1 bg-mine-bg"
+      style={{ paddingTop: insets.top, paddingBottom: insets.bottom + 12 }}
+    >
+      <View
+        pointerEvents="none"
+        className="absolute inset-0 items-center"
+        style={{ top: height * 0.12 }}
+      >
+        <View
+          style={{
+            width: glowSize,
+            height: glowSize,
+            borderRadius: glowSize / 2,
+            backgroundColor: "rgba(34, 197, 94, 0.14)",
+          }}
+        />
+      </View>
+
+      <View className="items-center justify-center flex-1 px-8">
+        <Image
+          source={LOGO}
+          style={{
+            width: logoSize,
+            height: logoSize,
+            marginBottom: isCompact ? 16 : 24,
+          }}
+          resizeMode="contain"
+        />
+
+        <Text
+          className="font-bold text-center text-mine-white"
+          style={{ fontSize: isCompact ? 36 : 42, letterSpacing: 0.5 }}
+        >
+          PolyTune
         </Text>
-        <Text className="text-base text-[#A7A7A7]">
-          Instantly translate your Spotify playback.
+
+        <Text
+          className="max-w-xs mt-3 italic text-center text-mine-white/90"
+          style={{ fontSize: isCompact ? 16 : 18, lineHeight: isCompact ? 24 : 28 }}
+        >
+          Instantly Translate Your Music
         </Text>
       </View>
 
-      <View className="items-center pb-10">
+      <View className="flex-shrink-0 px-6">
         <TouchableOpacity
-          className="mb-4 w-full items-center rounded-full bg-[#1DB954] px-8 py-4"
-          disabled={!request || loading}
-          onPress={() => promptAsync()}
+          onPress={handleStartListening}
+          className="flex-row items-center justify-center py-4 rounded-pill bg-mine-primary shadow-glow"
+          accessibilityLabel="Start listening"
         >
-          {loading ? (
-            <ActivityIndicator color="#000000" />
-          ) : (
-            <Text className="text-lg font-bold text-black">
-              🎧 Connect Spotify
-            </Text>
-          )}
+          <MaterialCommunityIcons name="headphones" size={22} color="#121212" />
+          <Text className="ml-2 text-lg font-bold text-mine-bg">Start Listening</Text>
         </TouchableOpacity>
-        <Text className="text-[10px] font-semibold tracking-[1.5px] text-[#A7A7A7]">
-          SECURE CONNECTION VIA SPOTIFY API
+
+        <Text className="mt-4 text-center text-[10px] font-semibold uppercase tracking-[1.5px] text-mine-dim">
+          Secure connection via Android media session
         </Text>
       </View>
+
+      <PrivacyPermissionModal
+        visible={showPrivacyModal}
+        onClose={() => setShowPrivacyModal(false)}
+        onConfirm={handleConfirmPrivacy}
+      />
     </View>
   );
 }
