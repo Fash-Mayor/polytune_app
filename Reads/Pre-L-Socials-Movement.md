@@ -76,4 +76,48 @@ Here is your 3-week **Pre-Launch Social Warm-Up Timetable**. This is designed sp
 
 > ⚠️ **Founder Note on Music Choice:** For your initial Week 2 batch videos, make sure the text overlays explicitly mention the language-learning aspect (e.g., *"Using my app to parse Korean verbs in real-time"*). This heavily reinforces our "Stealth Branding" position if anyone from compliance ever manually reviews your social media presence.
 
-To get this timetable moving, which specific aesthetic or final name are we locking in for the app so you can set up the handles this week?
+
+######################################################################################
+######################################################################################
+
+
+### 2. Hacker News (Show HN) Strategy
+
+Hacker News (HN) can drive massive traffic, but they are absolutely allergic to marketing speak. If you sound like a salesman, they will bury your post. If you sound like an engineer who solved a hard problem, they will test your app.
+
+**How to post on HN:**
+
+1. **The Title:** It must start with `Show HN:`. Keep it dry and factual.
+* *Example:* `Show HN: PolyTune – Real-time translated lyrics for Android using React Native and AI`
+
+
+2. **The Link:** Link directly to your GitHub repo (which now has that beautiful README).
+3. **The First Comment (CRITICAL):** As soon as you post, add a comment explaining *why* and *how* you built it. HN loves architectural details.
+* *Example Comment:* "Hey HN, I got tired of not knowing the lyrics to international tracks, so I built PolyTune. It uses a custom Kotlin notification listener to pull the media session, checks a Supabase edge function for cached lyrics, and if there's a miss, it streams a fresh translation via Gemini/Mixtral. The hardest part was dealing with Android's notification payload limits and preventing AI API stampedes when multiple users hit a new song. Happy to answer any questions about the React Native / Kotlin bridge or the streaming architecture. The APK is in the releases tab."
+
+
+
+---
+
+### 3. Short-Form Video Ideas (TikTok / Reels / Shorts)
+
+When you are ready to post videos, the goal is the **"Aha!" moment**. People need to see the app working in the first 3 seconds.
+
+**Idea 1: The "What are they actually saying?" Hook**
+
+* **Visual:** Screen recording of PolyTune opening. You are playing a massively viral non-English song (e.g., an Anime intro, a Bad Bunny track, or a K-Pop hit).
+* **Text on Screen:** "POV: You finally find out what this song actually means."
+* **Action:** The app instantly syncs, and the English translation pops up.
+* **Caption:** "Built an app that translates any song in real-time. Link in bio to test the beta."
+
+**Idea 2: The UI Flex (Aesthetic focus)**
+
+* **Visual:** A high-quality recording (maybe filmed from another phone so they can see your hand) scrolling smoothly through the lyrics. Tap the screen to show the album art popping in.
+* **Text on Screen:** "Spotify wouldn't translate my lyrics, so I built my own app."
+* **Audio:** A heavily trending, atmospheric audio track.
+
+**Idea 3: The Developer "Build in Public" Hook**
+
+* **Visual:** Quick cuts. 1 second of your VS Code terminal with the Android build running. 1 second of a frustrating error message. 3 seconds of the final app working flawlessly on your phone.
+* **Text on Screen:** "Day 14 of building my own lyrics app / It finally works."
+* **Caption:** "The Kotlin bridge almost broke me, but we finally have native background syncing. Beta is live."
