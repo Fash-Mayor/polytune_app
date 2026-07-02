@@ -10,7 +10,7 @@ import {
   openNotificationAccessSettings,
 } from "../modules/expo-ambient-listener";
 
-const LOGO = require("../assets/PolyTuneLogo2.png");
+const LOGO = require("../assets/PolyTuneLogo.png");
 
 export default function WelcomeScreen() {
   const router = useRouter();

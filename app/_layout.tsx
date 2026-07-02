@@ -3,6 +3,10 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import "../global.css";
 import { useFonts } from "expo-font";
+import * as SplashScreen from "expo-splash-screen";
+import { useEffect } from 'react'
+
+SplashScreen.preventAutoHideAsync(); // Prevent the splash screen from auto-hiding
 
 export default function RootLayout() {
 
@@ -13,6 +17,13 @@ export default function RootLayout() {
     'Outfit-Medium': require('../assets/fonts/Outfit-Medium.ttf'),
     'Outfit-Bold': require('../assets/fonts/Outfit-Bold.ttf'),
   });
+
+  useEffect(() => {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync(); // Hide the splash screen when fonts are loaded
+    }
+  }, [fontsLoaded]);
+
 
   return (
     <SafeAreaProvider>

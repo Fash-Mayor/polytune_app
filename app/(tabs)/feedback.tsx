@@ -29,10 +29,6 @@ export default function FeedbackScreen() {
       }}
       keyboardShouldPersistTaps="handled"
     >
-      <TouchableOpacity onPress={() => router.push("/(tabs)/")} className="mb-2 py-2">
-        <MaterialCommunityIcons name="arrow-left" size={24} color="#22C55E" />
-      </TouchableOpacity>
-
       <Text className="text-[28px] font-bold text-mine-primary">
         Help Improve PolyTune
       </Text>
@@ -41,11 +37,11 @@ export default function FeedbackScreen() {
         you encountered a bug or if you have suggestions for a better translation.
       </Text>
 
-      <Text className="mb-3 mt-8 text-xs font-bold tracking-widest text-mine-muted">
+      <Text className="mt-8 mb-3 text-xs font-bold tracking-widest text-mine-muted">
         FEEDBACK TYPE
       </Text>
 
-      <View className="mb-6 flex-row gap-3">
+      <View className="flex-row gap-3 mb-6">
         <TouchableOpacity
           onPress={() => setType("bug")}
           className={`flex-1 items-center rounded-xl border p-4 ${
@@ -107,34 +103,34 @@ export default function FeedbackScreen() {
           />
         </>
       ) : (
-        <View className="rounded-card border border-mine-border bg-mine-card p-5">
+        <View className="p-5 border rounded-card border-mine-border bg-mine-card">
           <Text className="text-xl font-bold text-mine-white">Lyric Suggestion</Text>
           <Text className="mt-2 text-sm leading-5 text-mine-muted">
             Only English translations are supported for now. Ensure your lyrics
             contain time stamps, e.g. [00:12.00]
           </Text>
 
-          <Text className="mb-2 mt-5 text-sm font-semibold text-mine-white">
+          <Text className="mt-5 mb-2 text-sm font-semibold text-mine-white">
             Song Title
           </Text>
           <TextInput
-            className="rounded-xl border border-mine-border bg-mine-input px-4 py-3 text-base text-mine-white"
+            className="px-4 py-3 text-base border rounded-xl border-mine-border bg-mine-input text-mine-white"
             value={songTitle}
             onChangeText={setSongTitle}
             placeholder="e.g. Idol"
             placeholderTextColor="#71717A"
           />
 
-          <Text className="mb-2 mt-4 text-sm font-semibold text-mine-white">Artist</Text>
+          <Text className="mt-4 mb-2 text-sm font-semibold text-mine-white">Artist</Text>
           <TextInput
-            className="rounded-xl border border-mine-border bg-mine-input px-4 py-3 text-base text-mine-white"
+            className="px-4 py-3 text-base border rounded-xl border-mine-border bg-mine-input text-mine-white"
             value={artist}
             onChangeText={setArtist}
             placeholder="e.g. Yoasobi"
             placeholderTextColor="#71717A"
           />
 
-          <Text className="mb-2 mt-4 text-sm font-semibold text-mine-white">Lyrics</Text>
+          <Text className="mt-4 mb-2 text-sm font-semibold text-mine-white">Lyrics</Text>
           <TextInput
             className="min-h-[160px] rounded-xl border border-mine-border bg-mine-input p-4 text-base text-mine-white"
             multiline
@@ -149,7 +145,7 @@ export default function FeedbackScreen() {
 
       <TouchableOpacity
         onPress={submitFeedback}
-        className="mt-6 items-center rounded-pill bg-mine-primary py-4 shadow-glow"
+        className="items-center py-4 mt-6 rounded-pill bg-mine-primary shadow-glow"
       >
         <Text className="text-lg font-bold text-mine-bg">Submit Feedback</Text>
       </TouchableOpacity>
