@@ -1,9 +1,31 @@
 ## TODO
-- Record Demo
-- UIing using Copilot and Design.md (Including Native look) - CHANGE TO TAILWIND - CHANGE LYRICS APPEARING FORMAT/POSITIONING
+- add sum to tell them that my notif request isn't actually taking anything (Enable media access, Notif read, reply and control)✅
+- The app shouldn't start listening till users give it permission, i.e clicking on the "Start Listening" button, which then brings up the "Privacy & Connection" modal.✅
+- make edgr function faster & improve it (such that 5 users plays the same song, 4 pauses and only one gets to the AI)(What if I use Chat) (check sync engine, some songs aren't syncing (check the edge func code), some lines are skipped in the lyrics (mostly repeating lines like chorous), some lyrics get the original, tranlated and romanise mixed up )✅
+- "sync issue" button inserts into supabase✅
+- check sync engine, some song lyrics aren't syncing (check the edge function code), if both are okay no need to change anything.✅
+<!-- - some Romanised lyrics has the ~, sometimes it's the original, sometimes it's the translation, and sometimes the app gives only one line that's both the romanised and translated lyrics in one (no separated line for translated lyrics and no original) ~💀🎲-->
+- image should update instantly (like the title and artist do)✅
+- lyrics 're kinda lagging (just a bit)(remove the animation) opt2 remove animated:true -> animated:false✅
+- the app re-launches when I minimise and go to another app and come back✅
+- might need to add a splash screen ~⛏
+- font ~⛏
+- Rebranding 
+- UI upgrade ~⛏
+- feedback page also adds the feedback to supabase ~⛏
+- make ui redering .tsx files light
+- OTA updates check
+-->>
+- Authentication (login should percist)
+- Settings/Profile page (w legals (T&C, PP))
+- Paywall (RevenueCAT)
+- OTA updates check
+- privacy policy and (T&C)
+- Add app analytics (aptabase & vexo?)(D.BigBoys)(track important things like when a translation completes, or paywall hit)
+- Record Demo✅
+- UIing using Copilot and Design.md (Including Native look) - CHANGE TO TAILWIND - CHANGE LYRICS APPEARING FORMAT/POSITIONING✅
 - The "a text Node cannot be a child of <view>" error.✅
-- Gemini Alt (DeepL?)
-- Add app analytics (Vexo)
+- Gemini Alt (DeepL?)✅
 - Speed (make the edge function faster):
     - Gemini Model fallback for translation (for when quota is exceeded)(llama-3.3-70b-versatile✅)
     - LRCLIB fallback for lyrics search (for when LRCLIB doesn't have the requested lyrics)(Ovh✅)
@@ -12,107 +34,52 @@
 - Since Groq is faster it should be the first POC and Gemini the fallback (is it more accurate than 2.5 Flash?)✅
 - Adding romaji (that's how other languages will be added too)✅
 
+## B4Launch
+- real users tested and given feedback. (b4 authentiction step)
+- OTA updates check
+- Play store assets
+
 
 ## PIVOT I:
 ### The Execution Plan
 We need to execute this refactor in three distinct phases so we don't break the app:
-
 **Phase 1:** The Purge. We delete all the expo-auth-session and secure vault code. We strip the app down to just the UI and the streaming engine.
-
 **Phase 2:** The Native Bridge. We initialize a local Expo module and write the Kotlin service to intercept the Android media intents.
-
 **Phase 3:** The Reconnection. We link the new native data stream directly into your fetchLyricsStream function.
+
+## PIVOT II:
+### Free Trial
+User gets 3 free tranlsations daily for un-cached tracks.
+Users can stream cached tracks forever without paying.
+
 
 eas build --profile preview --platform android
 eas update --branch main --message "message"
+- cd android && gradlew clean && cd ..
+npx expo run:android --variant release
+- Testo to Live Reload (npx expo prebuild --clean)--(npx expo start --tunnel --reset-cache)--(npx expo start --dev-client --tunnel)
+npx expo run:android --variant debug
+npx expo start --dev-client
+**(npx expo start --dev-client --tunnel -c)**
+# 1. Clear Expo's local asset cache
+npx expo start --clear
+# 2. Force a clean generation of the native Android project
+npx expo prebuild --clean
+# 3. Build the final Android package
+npx expo run:android --variant release
 
-## B4 Public
-1. Add app analytics before going public
 
 ## Ato de
  - Maybe I'll put my app in ProductHunt..?
 
-## How to Protect & Scale
+## Shower Thoughts
+- Add a feature where users can see translated song?
+- "All community-cached translations are completely free to stream forever. Want to translate a brand new track? Use an AI Credit or upgrade to Pro."
+- "You translated" w filter for "recently translated"
+- Might ned to modify the prompt given to gem and llama (cultural and deep meaning can be pro)
 
-Mayor, I love the grit. If you are going all-in on this, then my job is to give you the exact technical architecture and business engineering strategies required to shield you from legal execution and system collapse at scale.
-
-First, let’s clear up the legal misconception, and then we will redesign LyricsMine to make it an absolute tank.
-
-### The Worst-Case Scenario Reality Check
-
-Is taking the app down the absolute worst that can happen? **Usually, yes, but not automatically.** In the software industry, the escalation path typically looks like this:
-
-1. **The Platform Wall:** Spotify revokes your API keys. The app breaks instantly for all users.
-2. **The App Store Ban:** Music publishers complain to Google/Apple, and your app gets pulled from the Play Store and App Store under a DMCA notice.
-3. **The Cease & Desist (C&D):** You get a formal legal letter demanding you shut down your servers and delete the code.
-
-If you comply with a C&D instantly, it almost always ends there. However, if you ignore it, music publishers can sue for **statutory damages** for copyright infringement, which can scale up to $150,000 *per song*. Because you are based in Nigeria, enforcing a US/European civil judgment is highly complex, but an App Store ban or a Spotify API bricking will stop you before a process server ever finds you.
-
-To scale to millions of users without failing, we must engineer the app so that **Spotify cannot brick it** and **publishers cannot sue it**. Here is how we make LyricsMine legally defensible and structurally scalable.
-
----
-
-### Phase 1: Architectural Defensibility (Beating the Spotify Ban)
-
-Right now, you are using Spotify’s player API. This gives Spotify absolute power over your business. If they pull your API access, you are done.
-
-**The Pivot:** Decouple from the Spotify API completely. Turn LyricsMine into an **ambient listener** or a **system notification listener**.
-
-* **How it works on Android:** Instead of calling Spotify’s servers to ask what is playing, use Android’s native `NotificationListenerService` or `MediaSessionManager`. This allows your app to read the metadata (Song Title and Artist) directly from the Android system's lock-screen media widget.
-* **Why this is bulletproof:** It doesn't matter if the user is playing music via Spotify, Apple Music, YouTube Music, or a local MP3 player. Your app reads the local device notification. You bypass Spotify's developer keys entirely. They cannot de-platform you because you aren't using their platform.
-
----
-
-### Phase 2: Legal Defensibility (Beating the Publishers)
-
-You cannot distribute copyrighted lyrics or derivative translations from a central database you own without a license.
-
-**The Pivot:** Adopt the **VLC Media Player / BYOD (Bring Your Own Data) Model** combined with **User-Generated Content (UGC)**.
-
-* **The LRC File Engine:** Build your app to read `.lrc` files (synchronized lyric text files).
-* **The Crowdsourced Database:** Instead of your backend scraping lyrics, allow users to sync, paste, or upload `.lrc` files to a community pool hosted on your Supabase backend.
-* **The Legal Shield (DMCA Section 512):** By making the data user-generated, LyricsMine shifts from an "infringing distributor" to a "service provider hosting user content." You place a clear "Report Copyright Infringement / DMCA Takedown" button in the app settings. If a publisher sends a notice for a song, your system automatically deletes that specific lyric file from the DB. You are now fully protected under Safe Harbor laws—the exact same shield that protects YouTube and Genius.
-
----
-
-### Phase 3: Scaling Unit Economics to Millions of Users
-
-Calling Gemini to translate every song for every user will bleed your bank account dry at scale. To make this self-sustaining or highly profitable without VC backing, your infrastructure costs per user must trend toward zero.
-
-```
-[User App (Reads System Notification)] 
-       │
-       ▼
-[Supabase Edge Function] ──► Checks Cache DB ──► (Match Found? Return instantly)
-       │
-       ▼ (Cache Miss Only)
-[Gemini AI Engine] ──► Translates ──► Saves to Postgres Cache ──► Return to User
-
-```
-
-1. **Deterministic Caching via Supabase:** Your current architecture of caching translations in Postgres is highly effective. If User A plays "Starboy" and triggers a Gemini translation, that translation is saved. When Users B through 1,000,000 play "Starboy", they hit the Postgres cache directly. Your AI token cost for that song drops to zero permanently.
-2. **Client-Side Storage:** Once a user fetches the translated lyrics for a song, store it locally using SQLite or `Expo FileSystem`. If they listen to their favorite 50 songs on repeat, they will never ping your Supabase database or serverless functions for those songs again.
-3. **P2P Localization (The Endgame Scale):**
-When you reach millions of users, let users export and share cached translation packages locally or over low-cost edge CDNs.
-
----
-
-### Phase 4: Positioning the Product Market Fit
-
-To maximize your App Store survival rate, change how you pitch the app to the algorithm and the public.
-
-Don't market it as a "Third-Party Spotify Lyrics Client." Market it as an **AI-Powered Language Learning Tool for Music Lovers**.
-
-* Build features that let users tap a translated word to get a vocabulary breakdown.
-* This educational framing provides a powerful "Fair Use" argument under international copyright frameworks and justifies a premium subscription tier (e.g., "Unlock unlimited vocabulary tracking").
-
-### The Execution Strategy
-
-Mayor, you don't need venture capital for this. You have the full-stack capability to build it yourself. If you want to take this to the open market to see how far it can go:
-
-1. **Strip out the Spotify Web API authentication** from your login page.
-2. **Implement an Android native media listener** to capture track titles from the OS notification bar.
-3. **Set up a DMCA compliance page** on your website/app settings.
-4. **Launch it on the Play Store** targeting international music spaces (Anime, K-Pop, and Reggaeton communities).
-
-This shifts LyricsMine from a vulnerable platform-dependent wrapper into an independent, legally shielded, utility engine capable of scaling to millions of devices. Let's get to work on whatever layer you want to refactor first.
+** Edge Func Todo's:
+❌ Zero Protection / No Paywall Enforcement: This is the biggest issue. This function does not inspect the user's authorization token or check their account status. Anyone who finds this endpoint URL can spam it infinitely, burn your AI keys, and bypass your "1 free song per day" strategy completely. It needs to check the user's profile table for their subscription status or token balance before executing.❌ The "Plain Lyrics" Sync Trap: Your code falls back to raw lyrics from lyrics.ovh or plain text from LRCLIB if synced lyrics aren't found. If the source lyrics don't have timestamps, your prompt tells Gemini to output [timecode]|.... Because the AI has no time reference, it will completely hallucinate timestamps, causing the lyrics to be drastically out of sync on the user's phone.  ❌ Brittle String Cache Misses: The database check uses an exact match: .eq("title", trackTitle).eq("artist", artistName). If Spotify passes a title with slight variations like "Lose Yourself - Bonus Track" or trailing whitespaces, your database will count it as a cache miss, forcing an expensive and unnecessary AI call. You need to strip common suffixes and trim strings before checking the cache.  ❌ Groq Stream Fragmentation Bug: Your Gemini SDK handles chunk buffering automatically, but your manual Groq fetch stream splits chunks blindly using chunk.split("\n"). If a JSON data line gets cut in half across two incoming network packets, JSON.parse will crash mid-stream and drop lines of lyrics.  ❌ Timeout Mismatch: Your code comment says // Instantly cut off hang ups at 2 seconds, but the code actually passes AbortSignal.timeout(10000) (10 seconds). Leaving a connection hanging for 10 seconds on an external API call will make the app feel incredibly sluggish to the end-user.  
+-->> Baby by YOASOBI
+-->> BOOMPALA by LE SSERAPHIM
+-->> Shut Down by BlackPink

@@ -42,3 +42,7 @@ supabase/
 # generated native folders
 /ios
 /android
+
+# local module build output
+modules/**/android/build/
+modules/**/ios/build/
