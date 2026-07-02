@@ -1,112 +1,158 @@
-import { View, Text, TouchableOpacity, TextInput } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput } from "react-native";
 import { useState } from "react";
-import { COLORS } from "../../constants/theme";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+
+type FeedbackType = "bug" | "translation";
 
 export default function FeedbackScreen() {
-  const [type, setType] = useState<"bug" | "translation">("bug");
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const [type, setType] = useState<FeedbackType>("bug");
+  const [details, setDetails] = useState("");
+  const [songTitle, setSongTitle] = useState("");
+  const [artist, setArtist] = useState("");
+  const [lyrics, setLyrics] = useState("");
 
-  const SubmitFeedback = async () => {
-    alert(
-      "Lol, your submission no dey go anywhere💀. Jk, Implementing Feedback soon🚀",
-    );
+  const submitFeedback = () => {
+    alert("Thanks! Feedback submission will be wired up soon.");
   };
 
   return (
-    <View
-      className="flex-1 px-7"
-      style={{ backgroundColor: COLORS.background }}
+    <ScrollView
+      className="flex-1 bg-mine-bg"
+      contentContainerStyle={{
+        paddingTop: insets.top + 8,
+        paddingBottom: insets.bottom + 24,
+        paddingHorizontal: 24,
+      }}
+      keyboardShouldPersistTaps="handled"
     >
-      <View>
-        <TouchableOpacity className="py-2">
-          <Text className="text-[26px] font-bold" style={{ color: COLORS.primary }}>
-            Help Improve LyricsMine
-          </Text>
-        </TouchableOpacity>
-      </View>
-      <Text
-        className="pt-4 text-base leading-6"
-        style={{ color: COLORS.textInactive }}
-      >
-        Your feedback helps us provide a better experience. Please let us know
-        if you encountered a bug or if you have suggestions for a better
-        translation.
+      <TouchableOpacity onPress={() => router.push("/(tabs)/")} className="mb-2 py-2">
+        <MaterialCommunityIcons name="arrow-left" size={24} color="#22C55E" />
+      </TouchableOpacity>
+
+      <Text className="text-[28px] font-bold text-mine-primary">
+        Help Improve PolyTune
+      </Text>
+      <Text className="mt-3 text-base leading-6 text-mine-muted">
+        Your feedback helps us provide a better experience. Please let us know if
+        you encountered a bug or if you have suggestions for a better translation.
       </Text>
 
-      <Text
-        className="mb-2 mt-8 text-sm font-bold tracking-[1px]"
-        style={{ color: COLORS.primary }}
-      >
+      <Text className="mb-3 mt-8 text-xs font-bold tracking-widest text-mine-muted">
         FEEDBACK TYPE
       </Text>
+
       <View className="mb-6 flex-row gap-3">
         <TouchableOpacity
-          className="flex-1 items-center rounded-lg border p-4"
-          style={{
-            borderColor: type === "bug" ? COLORS.border : COLORS.textInactive,
-            backgroundColor: COLORS.surface,
-          }}
           onPress={() => setType("bug")}
+          className={`flex-1 items-center rounded-xl border p-4 ${
+            type === "bug"
+              ? "border-mine-primary bg-mine-card"
+              : "border-mine-border bg-mine-card"
+          }`}
         >
+          <MaterialCommunityIcons
+            name="bug-outline"
+            size={22}
+            color={type === "bug" ? "#22C55E" : "#71717A"}
+          />
           <Text
-            className="font-semibold"
-            style={{
-              color: type === "bug" ? COLORS.primary : COLORS.textInactive,
-            }}
+            className={`mt-2 text-sm font-semibold ${
+              type === "bug" ? "text-mine-primary" : "text-mine-muted"
+            }`}
           >
-            🐛 Report a Bug
+            Report a Bug
           </Text>
         </TouchableOpacity>
+
         <TouchableOpacity
-          className="flex-1 items-center rounded-lg border p-4"
-          style={{
-            borderColor:
-              type === "translation" ? COLORS.border : COLORS.textInactive,
-            backgroundColor: COLORS.surface,
-          }}
           onPress={() => setType("translation")}
+          className={`flex-1 items-center rounded-xl border p-4 ${
+            type === "translation"
+              ? "border-mine-primary bg-mine-card"
+              : "border-mine-border bg-mine-card"
+          }`}
         >
+          <MaterialCommunityIcons
+            name="translate"
+            size={22}
+            color={type === "translation" ? "#22C55E" : "#71717A"}
+          />
           <Text
-            className="font-semibold"
-            style={{
-              color:
-                type === "translation" ? COLORS.primary : COLORS.textInactive,
-            }}
+            className={`mt-2 text-sm font-semibold ${
+              type === "translation" ? "text-mine-primary" : "text-mine-muted"
+            }`}
           >
-            A/文 Suggest Translation
+            Suggest Translation
           </Text>
         </TouchableOpacity>
       </View>
 
-      <Text
-        className="mb-2 text-sm font-bold tracking-[1px]"
-        style={{ color: COLORS.primary }}
-      >
-        DETAILS
-      </Text>
-      <TextInput
-        className="flex-1 rounded-lg border p-4 text-base"
-        style={{
-          borderColor: COLORS.border,
-          backgroundColor: COLORS.surface,
-          color: COLORS.primary,
-        }}
-        multiline
-        placeholder="Please describe the issue or provide your suggested translation here..."
-        placeholderTextColor={COLORS.textInactive}
-      />
+      {type === "bug" ? (
+        <>
+          <Text className="mb-2 text-xs font-bold tracking-widest text-mine-muted">
+            DETAILS
+          </Text>
+          <TextInput
+            className="min-h-[220px] rounded-xl border border-mine-border bg-mine-input p-4 text-base text-mine-white"
+            multiline
+            textAlignVertical="top"
+            value={details}
+            onChangeText={setDetails}
+            placeholder="Please describe the issue or provide your suggested translation here..."
+            placeholderTextColor="#71717A"
+          />
+        </>
+      ) : (
+        <View className="rounded-card border border-mine-border bg-mine-card p-5">
+          <Text className="text-xl font-bold text-mine-white">Lyric Suggestion</Text>
+          <Text className="mt-2 text-sm leading-5 text-mine-muted">
+            Only English translations are supported for now. Ensure your lyrics
+            contain time stamps, e.g. [00:12.00]
+          </Text>
+
+          <Text className="mb-2 mt-5 text-sm font-semibold text-mine-white">
+            Song Title
+          </Text>
+          <TextInput
+            className="rounded-xl border border-mine-border bg-mine-input px-4 py-3 text-base text-mine-white"
+            value={songTitle}
+            onChangeText={setSongTitle}
+            placeholder="e.g. Idol"
+            placeholderTextColor="#71717A"
+          />
+
+          <Text className="mb-2 mt-4 text-sm font-semibold text-mine-white">Artist</Text>
+          <TextInput
+            className="rounded-xl border border-mine-border bg-mine-input px-4 py-3 text-base text-mine-white"
+            value={artist}
+            onChangeText={setArtist}
+            placeholder="e.g. Yoasobi"
+            placeholderTextColor="#71717A"
+          />
+
+          <Text className="mb-2 mt-4 text-sm font-semibold text-mine-white">Lyrics</Text>
+          <TextInput
+            className="min-h-[160px] rounded-xl border border-mine-border bg-mine-input p-4 text-base text-mine-white"
+            multiline
+            textAlignVertical="top"
+            value={lyrics}
+            onChangeText={setLyrics}
+            placeholder="Enter the correct lyrics here..."
+            placeholderTextColor="#71717A"
+          />
+        </View>
+      )}
 
       <TouchableOpacity
-        className="mt-6 items-center rounded-full p-4"
-        style={{ backgroundColor: COLORS.primary }}
-        onPress={SubmitFeedback}
+        onPress={submitFeedback}
+        className="mt-6 items-center rounded-pill bg-mine-primary py-4 shadow-glow"
       >
-        <Text
-          className="text-2xl font-bold"
-          style={{ color: COLORS.background }}
-        >
-          Submit Feedback
-        </Text>
+        <Text className="text-lg font-bold text-mine-bg">Submit Feedback</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }

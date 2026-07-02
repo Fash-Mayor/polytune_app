@@ -57,3 +57,7 @@ override fun onNotificationPosted(sbn: StatusBarNotification?) {
 }
 ```
 * **The CTA (Call to Action):** "I built this for the culture because I wanted to know what my favorite tracks actually mean without manually searching lyrics. If you're skeptical, run this code snippet through an AI model or ask a developer friend. If it checks out, grab LyricsMine on the Play Store!"
+
+
+VIDZ:
+- BOOMBAYAH - Launch day vid

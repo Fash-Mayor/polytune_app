@@ -21,8 +21,14 @@ export function startLyricsStream(
     body: JSON.stringify({ trackTitle: title, artistName: artist }),
   });
 
-  es.addEventListener("message", (event: { data?: string }) => {
-    if (!event.data) return;
+  es.addEventListener("message", (event: any) => {
+    // Use a type guard to ensure data exists and is a string
+    const dataString = event?.data;
+
+    if (typeof dataString !== "string") {
+      console.warn("Received non-string data or null from SSE");
+      return;
+    }
 
     try {
       const data = JSON.parse(event.data);

@@ -1,56 +1,126 @@
-import React from "react";
-import { View, Text, TouchableOpacity, Image } from "react-native";
+import { useEffect, useState } from "react";
+import { AppState, Image, Text, TouchableOpacity, View } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { COLORS } from "../constants/theme";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { PrivacyPermissionModal } from "../components/PrivacyPermissionModal";
+import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
+import {
+  isNotificationAccessEnabled,
+  openNotificationAccessSettings,
+} from "../modules/expo-ambient-listener";
 
-export default function HomeScreen() {
+const LOGO = require("../assets/PolyTuneLogo2.png");
+
+export default function WelcomeScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { width, height, logoSize, isCompact } = useResponsiveLayout();
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [checking, setChecking] = useState(true);
+
+  const goToAppIfPermitted = async () => {
+    const granted = await isNotificationAccessEnabled();
+    if (granted) {
+      router.replace("/(tabs)");
+    }
+    return granted;
+  };
+
+  useEffect(() => {
+    goToAppIfPermitted().finally(() => setChecking(false));
+  }, []);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        goToAppIfPermitted();
+      }
+    });
+    return () => sub.remove();
+  }, []);
+
+  const handleStartListening = () => {
+    setShowPrivacyModal(true);
+  };
+
+  const handleConfirmPrivacy = async () => {
+    setShowPrivacyModal(false);
+    await openNotificationAccessSettings();
+  };
+
+  if (checking) {
+    return <View className="flex-1 bg-mine-bg" />;
+  }
+
+  const glowSize = width * 1.15;
 
   return (
     <View
-      className="flex-1 justify-between px-7 py-7"
-      style={{ backgroundColor: COLORS.background }}
+      className="flex-1 bg-mine-bg"
+      style={{ paddingTop: insets.top, paddingBottom: insets.bottom + 12 }}
     >
-      <View className="flex-1 items-center justify-center">
+      <View
+        pointerEvents="none"
+        className="absolute inset-0 items-center"
+        style={{ top: height * 0.12 }}
+      >
+        <View
+          style={{
+            width: glowSize,
+            height: glowSize,
+            borderRadius: glowSize / 2,
+            backgroundColor: "rgba(34, 197, 94, 0.14)",
+          }}
+        />
+      </View>
+
+      <View className="items-center justify-center flex-1 px-8">
         <Image
-          source={require("../assets/NuMain.png")}
-          style={{ width: 128, height: 128 }}
+          source={LOGO}
+          style={{
+            width: logoSize,
+            height: logoSize,
+            marginBottom: isCompact ? 16 : 24,
+          }}
           resizeMode="contain"
         />
+
         <Text
-          className="mb-2 text-[48px] font-bold"
-          style={{ color: COLORS.primary }}
+          className="font-bold text-center text-mine-white"
+          style={{ fontSize: isCompact ? 36 : 42, letterSpacing: 0.5 }}
         >
-          LyricsMine
+          PolyTune
         </Text>
+
         <Text
-          className="text-center text-lg"
-          style={{ color: COLORS.textInactive }}
+          className="max-w-xs mt-3 italic text-center text-mine-white/90"
+          style={{ fontSize: isCompact ? 16 : 18, lineHeight: isCompact ? 24 : 28 }}
         >
-          Universal Ambient Listener
+          Instantly Translate Your Music
         </Text>
       </View>
 
-      <View className="items-center pb-10">
+      <View className="flex-shrink-0 px-6">
         <TouchableOpacity
-          className="mb-4 w-full items-center rounded-full px-8 py-4"
-          style={{ backgroundColor: COLORS.primary }}
-          onPress={() => router.push("/(tabs)/lyrics")}
+          onPress={handleStartListening}
+          className="flex-row items-center justify-center py-4 rounded-pill bg-mine-primary shadow-glow"
+          accessibilityLabel="Start listening"
         >
-          <Text
-            className="text-lg font-bold"
-            style={{ color: COLORS.background }}
-          >
-            🎧 Start Listening
-          </Text>
+          <MaterialCommunityIcons name="headphones" size={22} color="#121212" />
+          <Text className="ml-2 text-lg font-bold text-mine-bg">Start Listening</Text>
         </TouchableOpacity>
-        <Text
-          className="text-[10px] font-semibold tracking-[1.5px]"
-          style={{ color: COLORS.textInactive }}
-        >
-          SYSTEM-LEVEL MEDIA DETECTION
+
+        <Text className="mt-4 text-center text-[10px] font-semibold uppercase tracking-[1.5px] text-mine-dim">
+          Secure connection via Android media session
         </Text>
       </View>
+
+      <PrivacyPermissionModal
+        visible={showPrivacyModal}
+        onClose={() => setShowPrivacyModal(false)}
+        onConfirm={handleConfirmPrivacy}
+      />
     </View>
   );
 }

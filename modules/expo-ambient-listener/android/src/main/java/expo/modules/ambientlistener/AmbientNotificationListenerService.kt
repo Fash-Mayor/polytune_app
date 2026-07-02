@@ -55,7 +55,13 @@ class AmbientNotificationListenerService : NotificationListenerService() {
 
     val token = readMediaSessionToken(sbn.notification) ?: return
     val controller = MediaController(this, token)
-    MediaSessionStateHolder.updateFromController(controller)
+    
+    // Pass the notification down for instant fallback, and a callback for the 600ms delayed retry
+    MediaSessionStateHolder.updateFromController(controller, sbn.notification) {
+        MediaEventDispatcher.dispatch(controller.packageName)
+    }
+    
+    // Immediately dispatch whatever data we grabbed right now
     MediaEventDispatcher.dispatch(controller.packageName)
   }
 

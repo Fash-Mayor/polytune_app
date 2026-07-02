@@ -6,7 +6,7 @@ Let's dissect this panic systematically. We are going to address the pricing, th
 
 Your friend is dead wrong. People don't pay for information; they pay for **convenience and friction removal**.
 
-Yes, a user *could* open Chrome, type the song name, find a lyric site, dodge three pop-up ads, try to figure out which verse the singer is currently on, and scroll manually. Or, they could open LyricsMine and see it perfectly synced to their Spotify in one tap. You aren't selling translations, Mayor. You are selling a premium, seamless experience. People gladly pay $3–$5 a month for an app that makes their life slightly more aesthetic and frictionless.
+Yes, a user *could* open Chrome, type the song name, find a lyric site, dodge three pop-up ads, try to figure out which verse the singer is currently on, and scroll manually. Or, they could open PolyTune and see it perfectly synced to their Spotify in one tap. You aren't selling translations, Mayor. You are selling a premium, seamless experience. People gladly pay $3–$5 a month for an app that makes their life slightly more aesthetic and frictionless.
 
 ### 2. The Free Trial Mechanism (Protecting your API)
 

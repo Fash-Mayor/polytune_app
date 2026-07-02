@@ -1,22 +1,23 @@
 {
   "expo": {
-    "name": "LyricsMine",
-    "slug": "lyricsmine",
-    "scheme": "lyricsmine",
-    "version": "3.1.1",
+    "name": "PolyTune",
+    "slug": "PolyTune",
+    "scheme": "PolyTune",
+    "version": "1.3.2",
     "orientation": "portrait",
-    "icon": "./assets/NuMain.png",
+    "icon": "./assets/PolyTuneLogo2.png",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#000000",
     "splash": {
-      "image": "./assets/NuMain.png",
+      "image": "./assets/PolyTuneLogo2.png",
       "resizeMode": "contain",
       "backgroundColor": "#000000"
     },
     "plugins": [
       "expo-router",
       "expo-status-bar",
-      "expo-splash-screen"
+      "expo-splash-screen",
+      "expo-font"
     ],
     "extra": {
       "router": {
@@ -38,19 +39,19 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#000000",
-        "foregroundImage": "./assets/NuMain.png",
-        "monochromeImage": "./assets/NuMain.png"
+        "foregroundImage": "./assets/PolyTuneLogo2.png",
+        "monochromeImage": "./assets/PolyTuneLogo2.png"
       },
       "splash": {
         "backgroundColor": "#000000",
-        "image": "./assets/NuMain.png",
+        "image": "./assets/PolyTuneLogo2.png",
         "resizeMode": "contain",
         "dark": {
           "backgroundColor": "#000000",
-          "image": "./assets/NuMain.png"
+          "image": "./assets/PolyTuneLogo2.png"
         }
       },
-      "notificationIcon": "./assets/NuMain.png",
+      "notificationIcon": "./assets/PolyTuneLogo2.png",
       "package": "com.fashmayor.lyricsmine",
       "predictiveBackGestureEnabled": false
     }
