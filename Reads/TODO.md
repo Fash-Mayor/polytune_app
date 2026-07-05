@@ -4,17 +4,18 @@
 - make edgr function faster & improve it (such that 5 users plays the same song, 4 pauses and only one gets to the AI)(What if I use Chat) (check sync engine, some songs aren't syncing (check the edge func code), some lines are skipped in the lyrics (mostly repeating lines like chorous), some lyrics get the original, tranlated and romanise mixed up )✅
 - "sync issue" button inserts into supabase✅
 - check sync engine, some song lyrics aren't syncing (check the edge function code), if both are okay no need to change anything.✅
-<!-- - some Romanised lyrics has the ~, sometimes it's the original, sometimes it's the translation, and sometimes the app gives only one line that's both the romanised and translated lyrics in one (no separated line for translated lyrics and no original) ~💀🎲-->
+- some Romanised lyrics has the ~, sometimes it's the original, sometimes it's the translation, and sometimes the app gives only one line that's both the romanised and translated lyrics in one (no separated line for translated lyrics and no original)✅
 - image should update instantly (like the title and artist do)✅
 - lyrics 're kinda lagging (just a bit)(remove the animation) opt2 remove animated:true -> animated:false✅
 - the app re-launches when I minimise and go to another app and come back✅
 - UI upgrade✅
 - feedback page also adds the feedback to supabase✅
-- might need to add a splash screen ~⛏
+- might need to add a splash screen✅
 - font❌
 - make ui redering .tsx files light
-- OTA updates check; (lyrics block width, app analytics{mixpanel orpothog}, )
--->>
+- OTA updates check; (lyrics block width, app analytics )
+-->>edge function, album art/cover image don't get updated automaticlly like it
+s supposed to, add posthog analytics to: , capture persons
 - Authentication (login should percist)
 - Settings/Profile page (w legals (T&C, PP))
 - Paywall (RevenueCAT)
@@ -37,6 +38,7 @@
 - real users tested and given feedback. (b4 authentiction step)
 - OTA updates check
 - Play store assets
+- fonts fix (wAI)
 
 
 ## PIVOT I:
@@ -66,7 +68,7 @@ npx expo start --clear
 npx expo prebuild --clean
 # 3. Build the final Android package
 npx expo run:android --variant release
-
+### eas update --channel production --message "OTA Testo ichi"
 
 ## Ato de
  - Maybe I'll put my app in ProductHunt..?

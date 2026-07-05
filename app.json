@@ -2,7 +2,7 @@
   "expo": {
     "name": "PolyTune",
     "slug": "lyricsmine",
-    "scheme": "PolyTune",
+    "scheme": "polytune",
     "version": "1.3.2",
     "orientation": "portrait",
     "icon": "./assets/PolyTuneLogo2.png",

@@ -50,7 +50,9 @@ object MediaSessionUtils {
 
   fun updateFromControllers(controllers: List<MediaController>) {
     pickBestController(controllers)?.let { controller ->
-      MediaSessionStateHolder.updateFromController(controller)
+      MediaSessionStateHolder.updateFromController(controller, null) {
+        MediaEventDispatcher.dispatch()
+      }
       MediaEventDispatcher.dispatch()
     }
   }
