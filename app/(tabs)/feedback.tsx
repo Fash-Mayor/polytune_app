@@ -113,7 +113,7 @@ export default function FeedbackScreen() {
             textAlignVertical="top"
             value={details}
             onChangeText={setDetails}
-            placeholder="Please describe the issue or provide your suggested translation here..."
+            placeholder="Please describe the issue here..."
             placeholderTextColor="#71717A"
           />
         </>

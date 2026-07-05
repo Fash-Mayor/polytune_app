@@ -31,8 +31,19 @@ export function SqueezedTrackHeader({
       className="flex-row items-center px-4 py-3 border-b border-mine-primary bg-mine-bg"
     >
       <Image
+        key={
+          track
+            ? `${track.title ?? "unknown"}::${track.artist ?? "unknown"}::${track.albumArt ?? "none"}`
+            : "placeholder-art"
+        }
         source={hasArt && track ? { uri: track.albumArt } : PLACEHOLDER_ART}
-        style={{ width: 44, height: 44, borderRadius: 8, marginRight: 12, backgroundColor: "#252525" }}
+        style={{
+          width: 44,
+          height: 44,
+          borderRadius: 8,
+          marginRight: 12,
+          backgroundColor: "#252525",
+        }}
         resizeMode="cover"
       />
 

@@ -37,6 +37,11 @@ export function NowPlayingCard({
     >
       <View className="items-center">
         <Image
+          key={
+            track
+              ? `${track.title ?? "unknown"}::${track.artist ?? "unknown"}::${track.albumArt ?? "none"}`
+              : "placeholder-art"
+          }
           source={hasArt && track ? { uri: track.albumArt } : PLACEHOLDER_ART}
           style={{
             width: artSize,
@@ -57,7 +62,10 @@ export function NowPlayingCard({
         </Text>
         <Text
           className="text-center text-mine-muted"
-          style={{ fontSize: isCompact ? 13 : 15, marginBottom: isCompact ? 10 : 16 }}
+          style={{
+            fontSize: isCompact ? 13 : 15,
+            marginBottom: isCompact ? 10 : 16,
+          }}
           numberOfLines={1}
         >
           {track?.artist ?? "Play music on your phone"}
@@ -74,8 +82,12 @@ export function NowPlayingCard({
           className="w-full flex-row justify-between"
           style={{ marginBottom: isCompact ? 10 : 16 }}
         >
-          <Text className="text-xs text-mine-muted">{formatMs(positionMs)}</Text>
-          <Text className="text-xs text-mine-muted">{formatMs(durationMs)}</Text>
+          <Text className="text-xs text-mine-muted">
+            {formatMs(positionMs)}
+          </Text>
+          <Text className="text-xs text-mine-muted">
+            {formatMs(durationMs)}
+          </Text>
         </View>
 
         <TouchableOpacity

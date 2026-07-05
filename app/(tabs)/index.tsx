@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, AppState, Text, View } from "react-native";
 import Animated, {
   Easing,
@@ -10,6 +10,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { usePostHog } from "posthog-react-native";
 import { FloatingLyricActions } from "../../components/now-playing/FloatingLyricActions";
 import { LyricsList } from "../../components/now-playing/LyricsList";
 import { NowPlayingCard } from "../../components/now-playing/NowPlayingCard";
@@ -42,6 +43,8 @@ export default function NowPlayingScreen() {
   const [resyncing, setResyncing] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [lyricsVisible, setLyricsVisible] = useState(false);
+  const posthog = usePostHog();
+  const lastTrackedTitleRef = useRef<string | null>(null);
 
   useEffect(() => {
     const verify = async () => {
@@ -65,6 +68,20 @@ export default function NowPlayingScreen() {
     enabled: listeningEnabled,
   });
   const trackKey = track ? `${track.title}::${track.artist}` : null;
+
+  useEffect(() => {
+    if (!track?.title) {
+      lastTrackedTitleRef.current = null;
+      return;
+    }
+
+    if (lastTrackedTitleRef.current === track.title) return;
+
+    lastTrackedTitleRef.current = track.title;
+    posthog?.capture("Song_Detected", {
+      artist: track.artist || "Unknown Artist",
+    });
+  }, [posthog, track?.title]);
 
   const { lyricsData, fetchingLyrics, refetch } = useLyricsStream(
     listeningEnabled ? track?.title : undefined,
@@ -135,18 +152,21 @@ export default function NowPlayingScreen() {
           text: "Yes, Report",
           onPress: async () => {
             if (!track?.title || !track?.artist) return;
-            
+
             try {
               // Call the abstracted service method
               await ReportingService.reportSyncIssue(track.title, track.artist);
-              
-              Alert.alert("Thank You!", "The sync issue has been logged for correction.");
+
+              Alert.alert(
+                "Thank You!",
+                "The sync issue has been logged for correction.",
+              );
             } catch (err: any) {
               Alert.alert("Submission Error", err.message);
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -208,7 +228,10 @@ export default function NowPlayingScreen() {
       </Animated.View>
 
       <Animated.View style={[dashboardAnimatedStyle, { flex: 1 }]}>
-        <View className="justify-center flex-1 min-h-0" style={{ paddingTop: 4 }}>
+        <View
+          className="justify-center flex-1 min-h-0"
+          style={{ paddingTop: 4 }}
+        >
           <NowPlayingCard
             track={track}
             isPlaying={isPlaying}
