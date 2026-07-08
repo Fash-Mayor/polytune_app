@@ -58,7 +58,62 @@ override fun onNotificationPosted(sbn: StatusBarNotification?) {
 ```
 * **The CTA (Call to Action):** "I built this for the culture because I wanted to know what my favorite tracks actually mean without manually searching lyrics. If you're skeptical, run this code snippet through an AI model or ask a developer friend. If it checks out, grab LyricsMine on the Play Store!"
 
-
+mobile, testing
 VIDZ:
 - BOOMBAYAH - Launch day vid
 - PBUY - targeting negros that lik afro
+
+
+
+################################################################################################################################################################
+################################################################################################################################################################
+
+Mayor, a blurry screen recording is the absolute enemy of a UI flex. If the text isn't crisp, people will instantly scroll past. Since you are running this entirely on zero budget with your current PC specs, we have to bypass your phone's built-in recorder and use some clever presentation tricks.
+
+Here is how you get that premium 1080p look for YouTube Shorts and TikTok without buying new gear.
+
+### 1. The Dev Hack: Record via USB (`scrcpy`)
+
+Since your i5, 12GB RAM PC cannot handle running an Android Emulator, you can use the ultimate open-source dev tool: **scrcpy** (Screen Copy).
+
+* **What it is:** A ridiculously lightweight command-line tool that mirrors your Android screen to your PC via USB.
+* **The Magic:** It has a built-in recording function that bypasses your phone's hardware limits.
+* **How to do it:** Once installed, you just plug in your phone, open your terminal, and run: `scrcpy --record polytune_demo.mp4`. It will stream your phone's native, crisp resolution directly to your PC and save it as an MP4 file. It uses almost zero PC resources, so your 7th gen i5 won't even sweat.
+
+### 2. The "Shrink & Frame" Trick
+
+If a 720p video is stretched to fit a massive 1080x1920 TikTok canvas, it will look deep-fried. The trick is to **never make the screen recording fill the whole screen**.
+
+* Find a high-quality 1080p aesthetic background video (e.g., a lo-fi anime loop, a dark moody desk setup, or rain falling).
+* Open CapCut, put the aesthetic video as the background.
+* Import your PolyTune screen recording as an **Overlay** and shrink it down slightly so it sits in the middle of the screen.
+* Put a transparent "Phone Frame PNG" over it.
+* **Why this works:** Because the low-res video is physically smaller on the screen, the human eye can't detect the pixelation, and the whole post looks like a high-budget 3D mockup.
+
+### 3. The CapCut Polish (If you must use phone recordings)
+
+If you just want to record on your phone and edit quickly, you can salvage the 720p footage in CapCut:
+
+* Tap your video overlay and go to **Adjust**.
+* Bump **Sharpen** up to about 25–35 (this makes the lyrics legible).
+* Increase **Contrast** by 5–10 to make your dark mode look pitch black.
+* When exporting, manually force the output to **1080p** at **60fps**. TikTok's algorithm heavily favors 60fps videos because they look buttery smooth.
+
+---
+
+### Video Content Ideas (No speaking required)
+
+**Idea 1: The Anime/K-Pop Split Screen**
+
+* **Top Half:** A clip of a hype anime opening (like Jujutsu Kaisen) or a viral K-pop music video.
+* **Bottom Half:** Your screen recording of PolyTune perfectly syncing the lyrics to that exact song.
+* **Text Overlay:** *"Finally understanding what they are saying without leaving Spotify 😭"*
+
+**Idea 2: The "Code to Product" Transition**
+
+* **Clip 1 (1.5 seconds):** Record your PC screen showing your VS Code terminal running or some complex-looking code.
+* **Text:** *"Me trying to figure out how to parse foreign lyrics in real-time..."*
+* **Clip 2 (Drop on the beat):** Hard cut to the crisp screen recording of PolyTune working flawlessly.
+* **Text:** *"The result:"*
+
+Which of these recording fixes do you want to try setting up first for the next post?

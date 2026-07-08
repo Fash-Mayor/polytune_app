@@ -4,18 +4,17 @@
 - make edgr function faster & improve it (such that 5 users plays the same song, 4 pauses and only one gets to the AI)(What if I use Chat) (check sync engine, some songs aren't syncing (check the edge func code), some lines are skipped in the lyrics (mostly repeating lines like chorous), some lyrics get the original, tranlated and romanise mixed up )✅
 - "sync issue" button inserts into supabase✅
 - check sync engine, some song lyrics aren't syncing (check the edge function code), if both are okay no need to change anything.✅
-<!-- - some Romanised lyrics has the ~, sometimes it's the original, sometimes it's the translation, and sometimes the app gives only one line that's both the romanised and translated lyrics in one (no separated line for translated lyrics and no original) ~💀🎲-->
+- some Romanised lyrics has the ~, sometimes it's the original, sometimes it's the translation, and sometimes the app gives only one line that's both the romanised and translated lyrics in one (no separated line for translated lyrics and no original)✅
 - image should update instantly (like the title and artist do)✅
 - lyrics 're kinda lagging (just a bit)(remove the animation) opt2 remove animated:true -> animated:false✅
 - the app re-launches when I minimise and go to another app and come back✅
-- might need to add a splash screen ~⛏
-- font ~⛏
-- Rebranding 
-- UI upgrade ~⛏
-- feedback page also adds the feedback to supabase ~⛏
+- UI upgrade✅
+- feedback page also adds the feedback to supabase✅
+- might need to add a splash screen✅
+- font❌
 - make ui redering .tsx files light
-- OTA updates check
--->>
+- OTA updates check w (lyrics block width & app analytics)
+-->> skipping forward and going back
 - Authentication (login should percist)
 - Settings/Profile page (w legals (T&C, PP))
 - Paywall (RevenueCAT)
@@ -38,6 +37,7 @@
 - real users tested and given feedback. (b4 authentiction step)
 - OTA updates check
 - Play store assets
+- fonts fix (wAI)
 
 
 ## PIVOT I:
@@ -67,7 +67,7 @@ npx expo start --clear
 npx expo prebuild --clean
 # 3. Build the final Android package
 npx expo run:android --variant release
-
+### eas update --channel production --message "OTA Testo ichi"
 
 ## Ato de
  - Maybe I'll put my app in ProductHunt..?
@@ -80,6 +80,4 @@ npx expo run:android --variant release
 
 ** Edge Func Todo's:
 ❌ Zero Protection / No Paywall Enforcement: This is the biggest issue. This function does not inspect the user's authorization token or check their account status. Anyone who finds this endpoint URL can spam it infinitely, burn your AI keys, and bypass your "1 free song per day" strategy completely. It needs to check the user's profile table for their subscription status or token balance before executing.❌ The "Plain Lyrics" Sync Trap: Your code falls back to raw lyrics from lyrics.ovh or plain text from LRCLIB if synced lyrics aren't found. If the source lyrics don't have timestamps, your prompt tells Gemini to output [timecode]|.... Because the AI has no time reference, it will completely hallucinate timestamps, causing the lyrics to be drastically out of sync on the user's phone.  ❌ Brittle String Cache Misses: The database check uses an exact match: .eq("title", trackTitle).eq("artist", artistName). If Spotify passes a title with slight variations like "Lose Yourself - Bonus Track" or trailing whitespaces, your database will count it as a cache miss, forcing an expensive and unnecessary AI call. You need to strip common suffixes and trim strings before checking the cache.  ❌ Groq Stream Fragmentation Bug: Your Gemini SDK handles chunk buffering automatically, but your manual Groq fetch stream splits chunks blindly using chunk.split("\n"). If a JSON data line gets cut in half across two incoming network packets, JSON.parse will crash mid-stream and drop lines of lyrics.  ❌ Timeout Mismatch: Your code comment says // Instantly cut off hang ups at 2 seconds, but the code actually passes AbortSignal.timeout(10000) (10 seconds). Leaving a connection hanging for 10 seconds on an external API call will make the app feel incredibly sluggish to the end-user.  
--->> Baby by YOASOBI
--->> BOOMPALA by LE SSERAPHIM
--->> Shut Down by BlackPink
+-->> 

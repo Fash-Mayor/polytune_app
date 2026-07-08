@@ -97,9 +97,16 @@ object MediaSessionStateHolder {
     playing: Boolean?,
     positionMs: Long?,
   ) {
+    val titleChanged = !trackTitle.isNullOrBlank() && trackTitle != title
     if (!trackTitle.isNullOrBlank()) title = trackTitle
     if (!trackArtist.isNullOrBlank()) artist = trackArtist
-    if (!artUri.isNullOrBlank()) albumArtUri = artUri
+
+    if (!artUri.isNullOrBlank()) {
+      albumArtUri = artUri
+    } else if (titleChanged) {
+      albumArtUri = null
+    }
+
     if (playing != null) isPlaying = playing
     if (positionMs != null && positionMs >= 0) updatePosition(positionMs)
   }

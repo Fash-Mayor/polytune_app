@@ -10,12 +10,6 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        fontFamily: {
-        sans: ['Outfit-Regular'],
-        semibold: ['Outfit-SemiBold'], 
-        medium: ['Outfit-Medium'],
-        bold: ['Outfit-Bold'],
-      },
         mine: {
           bg: "#121212",
           surface: "#1E1E1E",
@@ -29,6 +23,12 @@ module.exports = {
           border: "#3F3F46",
           "border-active": "#22C55E",
         },
+      },
+      fontFamily: {
+        sans: ["Outfit_400Regular"],
+        semibold: ["Outfit_600SemiBold"],
+        medium: ["Outfit_500Medium"],
+        bold: ["Outfit_700Bold"],
       },
       borderRadius: {
         card: "20px",

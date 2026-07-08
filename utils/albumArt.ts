@@ -2,11 +2,9 @@ export function isValidAlbumArtUri(
   uri: string | null | undefined,
 ): uri is string {
   if (!uri) return false;
-  return (
-    uri.startsWith("data:") ||
-    uri.startsWith("http://") ||
-    uri.startsWith("https://") ||
-    uri.startsWith("file://")
+
+  return /^(data:|https?:\/\/|file:\/\/|content:\/\/|android\.resource:\/\/)/i.test(
+    uri,
   );
 }
 

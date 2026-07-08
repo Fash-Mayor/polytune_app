@@ -6,7 +6,9 @@ import android.media.session.MediaController
 import android.media.session.MediaSession
 import android.app.Notification
 import android.os.Build
+import androidx.annotation.Keep
 
+@Keep // <-- THIS IS THE BULLETPROOF SHIELD
 class AmbientNotificationListenerService : NotificationListenerService() {
   override fun onListenerConnected() {
     super.onListenerConnected()
