@@ -34,7 +34,10 @@
       "policy": "fingerprint"
     },
     "updates": {
-      "url": "https://u.expo.dev/0da6be6a-07fb-4ecc-bb6a-80d0cb83ed21"
+      "url": "https://u.expo.dev/0da6be6a-07fb-4ecc-bb6a-80d0cb83ed21",
+      "requestHeaders": {
+        "expo-channel-name": "production"
+      }
     },
     "ios": {
       "supportsTablet": true

@@ -45,7 +45,7 @@ export default function FeedbackScreen() {
       keyboardShouldPersistTaps="handled"
     >
       <Text className="text-[28px] font-bold text-mine-primary">
-        Help Us Improve PolyTune
+        Help Improve PolyTune
       </Text>
       <Text className="mt-3 text-base leading-6 text-mine-muted">
         Your feedback helps us provide a better experience. Please let us know if
