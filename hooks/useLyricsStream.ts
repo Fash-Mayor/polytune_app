@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import EventSource from "react-native-sse";
+import { usePostHog } from "posthog-react-native";
 import { startLyricsStream } from "../services/lyricsStream";
 import type { LyricLine } from "../types/lyrics";
 
@@ -23,6 +24,7 @@ export function useLyricsStream(
   const [fetchingLyrics, setFetchingLyrics] = useState(false);
   const [refetchToken, setRefetchToken] = useState(0);
   const activeEventSource = useRef<EventSource | null>(null);
+  const posthog = usePostHog();
 
   const closeStream = useCallback(() => {
     activeEventSource.current?.close();
@@ -49,8 +51,10 @@ export function useLyricsStream(
       onError: () => setFetchingLyrics(false),
     });
 
+    posthog?.capture("Lyrics_Stream_Started", { artist });
+
     return closeStream;
-  }, [title, artist, refetchToken, closeStream]);
+  }, [title, artist, refetchToken, closeStream, posthog]);
 
   return { lyricsData, fetchingLyrics, refetch };
 }
