@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import type { LyricLine } from "../../types/lyrics";
 import { findActiveLineIndex } from "../../utils/lyricSync";
+import { useTheme } from "../../hooks/useTheme";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 // Fine-tuned offset for perfect vertical centering alignment
@@ -25,6 +26,7 @@ export function LyricsList({
   playbackPositionMs,
   isRomanized,
 }: LyricsListProps) {
+  const { accentColor } = useTheme();
   const scrollViewRef = useRef<ScrollView>(null);
   const lyricPositions = useRef<Record<number, number>>({});
   const lastScrolledIndex = useRef(-1);
@@ -44,7 +46,7 @@ export function LyricsList({
     if (targetY === undefined) return;
 
     lastScrolledIndex.current = activeIndex;
-    
+
     // Smoothly transition to position with native system physics deceleration
     scrollViewRef.current?.scrollTo({
       y: Math.max(0, targetY - SCROLL_CENTER_OFFSET),
@@ -56,7 +58,11 @@ export function LyricsList({
     <ScrollView
       ref={scrollViewRef}
       className="flex-1"
-      contentContainerStyle={{ paddingHorizontal: 28, paddingBottom: SCREEN_HEIGHT / 1.8, paddingTop: 40 }}
+      contentContainerStyle={{
+        paddingHorizontal: 28,
+        paddingBottom: SCREEN_HEIGHT / 1.8,
+        paddingTop: 40,
+      }}
       showsVerticalScrollIndicator={false}
       scrollEventThrottle={16} // Maximizes scroll listener interaction responsiveness
       decelerationRate="fast"
@@ -86,9 +92,12 @@ export function LyricsList({
           >
             <Text
               className={`text-[25px] font-bold leading-9 ${
-                isActive ? "text-mine-primary" : "text-mine-muted"
+                isActive ? "text-mine-white" : "text-mine-muted"
               }`}
-              style={{ opacity: isActive ? 1.0 : 0.3 }}
+              style={{
+                opacity: isActive ? 1.0 : 0.3,
+                color: isActive ? accentColor : undefined,
+              }}
             >
               {original}
             </Text>

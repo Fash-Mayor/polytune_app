@@ -9,6 +9,7 @@ import {
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { isValidAlbumArtUri, PLACEHOLDER_ART } from "../../utils/albumArt";
 import type { CurrentTrack } from "../../types/media";
+import { useTheme } from "../../hooks/useTheme";
 
 type SqueezedTrackHeaderProps = {
   track: CurrentTrack | null;
@@ -24,11 +25,13 @@ export function SqueezedTrackHeader({
   resyncing = false,
 }: SqueezedTrackHeaderProps) {
   const hasArt = isValidAlbumArtUri(track?.albumArt);
+  const { accentColor } = useTheme();
 
   return (
     <Pressable
       onPress={onPress}
-      className="flex-row items-center px-4 py-3 border-b border-mine-primary bg-mine-bg"
+      className="flex-row items-center px-4 py-3 border-b bg-mine-bg"
+      style={{ borderBottomColor: accentColor }}
     >
       <Image
         key={
@@ -64,9 +67,9 @@ export function SqueezedTrackHeader({
         accessibilityLabel="Re-sync lyrics"
       >
         {resyncing ? (
-          <ActivityIndicator size="small" color="#22C55E" />
+          <ActivityIndicator size="small" color={accentColor} />
         ) : (
-          <MaterialCommunityIcons name="sync" size={20} color="#22C55E" />
+          <MaterialCommunityIcons name="sync" size={20} color={accentColor} />
         )}
       </TouchableOpacity>
     </Pressable>

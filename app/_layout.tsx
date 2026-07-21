@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { Text, TextInput } from "react-native";
 import { useFonts } from "expo-font";
 import { PostHogProvider } from "posthog-react-native";
+import { ThemeProvider } from "../providers/ThemeProvider";
 
 SplashScreen.preventAutoHideAsync(); // Prevent the splash screen from auto-hiding
 
@@ -57,18 +58,20 @@ export default function RootLayout() {
         captureAppLifecycleEvents: true,
       }}
     >
-      <SafeAreaProvider>
-        <StatusBar style="light" />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: "#121212" },
-          }}
-        >
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(tabs)" />
-        </Stack>
-      </SafeAreaProvider>
+      <ThemeProvider>
+        <SafeAreaProvider>
+          <StatusBar style="light" />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: "#121212" },
+            }}
+          >
+            <Stack.Screen name="index" />
+            <Stack.Screen name="(tabs)" />
+          </Stack>
+        </SafeAreaProvider>
+      </ThemeProvider>
     </PostHogProvider>
   );
 }
