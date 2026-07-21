@@ -12,10 +12,18 @@
 - feedback page also adds the feedback to supabase✅
 - might need to add a splash screen✅
 - font❌
+- sync issue message for unsaved tracks, change theme setting
 - make ui redering .tsx files light
-- OTA updates check w (lyrics block width & app analytics)
--->> skipping forward and going back
+- add YTM to edge func
+- Install JS packages for romanization
+- AI fallback
+- skipping forward & going back (changing song)
 - Authentication (login should percist)
+- analytics for Person
+- karaoke mode
+- OTA updates check w (app analytics)
+-->> 
+-->>
 - Settings/Profile page (w legals (T&C, PP))
 - Paywall (RevenueCAT)
 - OTA updates check
@@ -68,7 +76,7 @@ npx expo prebuild --clean
 # 3. Build the final Android package
 npx expo run:android --variant release
 ### eas update --channel production --message "OTA Testo ichi"
-
+how to preview befor pushing OTA: Expo go don't work (yet)
 ## Ato de
  - Maybe I'll put my app in ProductHunt..?
 

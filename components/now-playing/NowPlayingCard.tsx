@@ -3,6 +3,7 @@ import { FontAwesome } from "@expo/vector-icons";
 import { isValidAlbumArtUri, PLACEHOLDER_ART } from "../../utils/albumArt";
 import { formatMs } from "../../utils/formatTime";
 import type { CurrentTrack } from "../../types/media";
+import { useTheme } from "../../hooks/useTheme";
 
 type NowPlayingCardProps = {
   track: CurrentTrack | null;
@@ -29,6 +30,7 @@ export function NowPlayingCard({
 }: NowPlayingCardProps) {
   const hasArt = isValidAlbumArtUri(track?.albumArt);
   const progress = durationMs > 0 ? Math.min(positionMs / durationMs, 1) : 0;
+  const { accentColor } = useTheme();
 
   return (
     <View
@@ -73,8 +75,11 @@ export function NowPlayingCard({
 
         <View className="mb-1.5 h-1.5 w-full overflow-hidden rounded-full bg-mine-border">
           <View
-            className="h-full rounded-full bg-mine-primary"
-            style={{ width: `${progress * 100}%` }}
+            className="h-full rounded-full"
+            style={{
+              width: `${progress * 100}%`,
+              backgroundColor: accentColor,
+            }}
           />
         </View>
 

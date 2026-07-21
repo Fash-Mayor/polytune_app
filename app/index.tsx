@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrivacyPermissionModal } from "../components/PrivacyPermissionModal";
 import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
+import { useTheme } from "../hooks/useTheme";
 import {
   isNotificationAccessEnabled,
   openNotificationAccessSettings,
@@ -16,6 +17,7 @@ export default function WelcomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width, height, logoSize, isCompact } = useResponsiveLayout();
+  const { accentColor } = useTheme();
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [checking, setChecking] = useState(true);
 
@@ -70,7 +72,7 @@ export default function WelcomeScreen() {
             width: glowSize,
             height: glowSize,
             borderRadius: glowSize / 2,
-            backgroundColor: "rgba(34, 197, 94, 0.14)",
+            backgroundColor: `${accentColor}22`,
           }}
         />
       </View>
@@ -95,7 +97,10 @@ export default function WelcomeScreen() {
 
         <Text
           className="max-w-xs mt-3 italic text-center text-mine-white/90"
-          style={{ fontSize: isCompact ? 16 : 18, lineHeight: isCompact ? 24 : 28 }}
+          style={{
+            fontSize: isCompact ? 16 : 18,
+            lineHeight: isCompact ? 24 : 28,
+          }}
         >
           Instantly Translate Your Music
         </Text>
@@ -104,11 +109,14 @@ export default function WelcomeScreen() {
       <View className="flex-shrink-0 px-6">
         <TouchableOpacity
           onPress={handleStartListening}
-          className="flex-row items-center justify-center py-4 rounded-pill bg-mine-primary shadow-glow"
+          className="flex-row items-center justify-center py-4 rounded-pill shadow-glow"
+          style={{ backgroundColor: accentColor }}
           accessibilityLabel="Start listening"
         >
           <MaterialCommunityIcons name="headphones" size={22} color="#121212" />
-          <Text className="ml-2 text-lg font-bold text-mine-bg">Start Listening</Text>
+          <Text className="ml-2 text-lg font-bold text-mine-bg">
+            Start Listening
+          </Text>
         </TouchableOpacity>
 
         <Text className="mt-4 text-center text-[10px] font-semibold uppercase tracking-[1.5px] text-mine-dim">

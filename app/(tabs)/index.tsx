@@ -28,12 +28,14 @@ import {
 } from "../../modules/expo-ambient-listener";
 import { estimateDurationMs } from "../../utils/estimateDuration";
 import { ReportingService } from "../../services/reportingService";
+import { useTheme } from "../../hooks/useTheme";
 
 const TRANSITION_MS = 480;
 
 export default function NowPlayingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { accentColor } = useTheme();
   const progress = useSharedValue(0);
   const { isCompact, artSize, cardPadding, sectionGap, playButtonSize } =
     useResponsiveLayout();
@@ -273,7 +275,7 @@ export default function NowPlayingScreen() {
         >
           {showLoading ? (
             <View className="items-center justify-center flex-1">
-              <ActivityIndicator size="large" color="#22C55E" />
+              <ActivityIndicator size="large" color={accentColor} />
               <Text className="mt-4 text-sm italic text-mine-muted">
                 Streaming translations from cloud...
               </Text>
