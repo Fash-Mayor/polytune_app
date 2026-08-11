@@ -66,16 +66,16 @@ export default function SettingsScreen() {
         paddingHorizontal: 20,
       }}
     >
-      <View className="mb-6 rounded-card border border-mine-border bg-mine-card p-5">
-        <View className="mb-4 flex-row items-center justify-between">
+      <View className="p-5 mb-6 border rounded-card border-mine-border bg-mine-card">
+        <View className="flex-row items-center justify-between mb-4">
           <View className="flex-1">
-            <Text className="text-xl font-bold text-mine-white">Theme</Text>
-            <Text className="mt-1 text-sm text-mine-muted">
+            <Text className="text-xl font-outfit-bold text-mine-white">Theme</Text>
+            <Text className="mt-1 font-sans text-sm text-mine-muted">
               Change the app accent color and save it for later.
             </Text>
           </View>
           <View
-            className="rounded-full p-3"
+            className="p-3 rounded-full"
             style={{ backgroundColor: `${accentColor}22` }}
           >
             <MaterialCommunityIcons
@@ -93,22 +93,22 @@ export default function SettingsScreen() {
               <TouchableOpacity
                 key={preset.id}
                 onPress={() => handleThemeSelection(preset.id)}
-                className="flex-row items-center justify-between rounded-xl border px-4 py-3"
+                className="flex-row items-center justify-between px-4 py-3 border rounded-xl"
                 style={{
                   borderColor: selected ? accentColor : "#3F3F46",
                   backgroundColor: selected ? `${accentColor}18` : "#252525",
                 }}
               >
                 <View className="flex-1">
-                  <Text className="text-sm font-semibold text-mine-white">
+                  <Text className="text-sm font-outfit-semibold text-mine-white">
                     {preset.name}
                   </Text>
-                  <Text className="mt-1 text-xs text-mine-muted">
+                  <Text className="mt-1 font-sans text-xs text-mine-muted">
                     {preset.description}
                   </Text>
                 </View>
                 <View
-                  className="ml-3 h-5 w-5 rounded-full border border-white/30"
+                  className="w-5 h-5 ml-3 border rounded-full border-white/30"
                   style={{ backgroundColor: preset.accent }}
                 />
               </TouchableOpacity>
@@ -117,25 +117,25 @@ export default function SettingsScreen() {
 
           <TouchableOpacity
             onPress={() => handleThemeSelection("disco")}
-            className="flex-row items-center justify-between rounded-xl border px-4 py-3"
+            className="flex-row items-center justify-between px-4 py-3 border rounded-xl"
             style={{
               borderColor: isDiscoMode ? accentColor : "#3F3F46",
               backgroundColor: isDiscoMode ? `${accentColor}18` : "#252525",
             }}
           >
             <View className="flex-1">
-              <Text className="text-sm font-semibold text-mine-white">
+              <Text className="text-sm font-outfit-semibold text-mine-white">
                 Disco Mode
               </Text>
-              <Text className="mt-1 text-xs text-mine-muted">
+              <Text className="mt-1 font-sans text-xs text-mine-muted">
                 The accent color shifts through a rainbow.
               </Text>
             </View>
-            <View className="ml-3 flex-row gap-2">
+            <View className="flex-row gap-2 ml-3">
               {DISCO_THEME_COLORS.slice(0, 4).map((color) => (
                 <View
                   key={color}
-                  className="h-4 w-4 rounded-full border border-white/30"
+                  className="w-4 h-4 border rounded-full border-white/30"
                   style={{ backgroundColor: color }}
                 />
               ))}
@@ -144,15 +144,15 @@ export default function SettingsScreen() {
         </View>
       </View>
 
-      <View className="rounded-card border border-mine-border bg-mine-card p-5">
-        <Text className="text-lg font-semibold text-mine-white">
+      <View className="p-5 border rounded-card border-mine-border bg-mine-card">
+        <Text className="text-lg font-outfit-semibold text-mine-white">
           Custom Accent
         </Text>
-        <Text className="mt-1 text-sm text-mine-muted">
+        <Text className="mt-1 font-sans text-sm text-mine-muted">
           Pick any hex color and make the app feel uniquely yours.
         </Text>
 
-        <View className="mt-4 flex-row gap-3">
+        <View className="flex-row gap-3 mt-4">
           {colorSwatches.map((color) => (
             <TouchableOpacity
               key={color}
@@ -160,14 +160,14 @@ export default function SettingsScreen() {
                 setCustomColor(color.replace("#", ""));
                 void setCustomAccentColor(color);
               }}
-              className="h-10 w-10 rounded-full border border-white/30"
+              className="w-10 h-10 border rounded-full border-white/30"
               style={{ backgroundColor: color }}
             />
           ))}
         </View>
 
         <TextInput
-          className="mt-4 rounded-xl border border-mine-border bg-mine-input px-4 py-3 text-base text-mine-white"
+          className="px-4 py-3 mt-4 text-base border rounded-xl border-mine-border bg-mine-input text-mine-white"
           value={customColor}
           onChangeText={setCustomColor}
           placeholder="e.g. 22C55E"
@@ -178,19 +178,19 @@ export default function SettingsScreen() {
 
         <TouchableOpacity
           onPress={handleCustomApply}
-          className="mt-4 rounded-pill px-4 py-3"
+          className="px-4 py-3 mt-4 rounded-pill"
           style={{ backgroundColor: accentColor }}
         >
-          <Text className="text-center text-sm font-semibold text-mine-bg">
+          <Text className="text-sm text-center font-outfit-semibold text-mine-bg">
             Apply Custom Color
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={() => void resetTheme()}
-          className="mt-3 rounded-pill border border-mine-border px-4 py-3"
+          className="px-4 py-3 mt-3 border rounded-pill border-mine-border"
         >
-          <Text className="text-center text-sm font-semibold text-mine-white">
+          <Text className="text-sm text-center font-outfit-semibold text-mine-white">
             Reset to Default
           </Text>
         </TouchableOpacity>

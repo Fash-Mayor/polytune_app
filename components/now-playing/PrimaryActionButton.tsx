@@ -18,7 +18,7 @@ export function PrimaryActionButton({
   return (
     <TouchableOpacity
       onPress={onPress}
-      className="mx-4 flex-row items-center justify-center rounded-pill shadow-glow"
+      className="flex-row items-center justify-center mx-4 rounded-pill shadow-glow"
       style={{
         paddingVertical: compact ? 13 : 16,
         backgroundColor: accentColor,
@@ -32,7 +32,7 @@ export function PrimaryActionButton({
         style={{ marginRight: 10 }}
       />
       <Text
-        className="font-bold text-mine-bg"
+        className="font-outfit-semibold text-mine-bg"
         style={{ fontSize: compact ? 16 : 18 }}
       >
         {hasTrack ? "View Lyrics" : "Check What's Playing"}

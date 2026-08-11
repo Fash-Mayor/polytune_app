@@ -56,16 +56,16 @@ export default function FeedbackScreen() {
       }}
       keyboardShouldPersistTaps="handled"
     >
-      <Text className="text-[28px] font-bold" style={{ color: accentColor }}>
+      <Text className="text-[28px] font-outfit-bold" style={{ color: accentColor }}>
         Help Improve PolyTune
       </Text>
-      <Text className="mt-3 text-base leading-6 text-mine-muted">
+      <Text className="mt-3 text-base leading-6 font-outfit-medium text-mine-muted">
         Your feedback helps us provide a better experience. Please let us know
         if you encountered a bug or if you have suggestions for a better
         translation.
       </Text>
 
-      <Text className="mt-8 mb-3 text-xs font-bold tracking-widest text-mine-muted">
+      <Text className="mt-8 mb-3 text-xs tracking-widest font-outfit-bold text-mine-muted">
         FEEDBACK TYPE
       </Text>
 
@@ -84,7 +84,7 @@ export default function FeedbackScreen() {
             color={type === "bug" ? accentColor : "#71717A"}
           />
           <Text
-            className={`mt-2 text-sm font-semibold ${
+            className={`mt-2 text-sm font-outfit-semibold ${
               type === "bug" ? "text-mine-white" : "text-mine-muted"
             }`}
           >
@@ -106,7 +106,7 @@ export default function FeedbackScreen() {
             color={type === "translation" ? accentColor : "#71717A"}
           />
           <Text
-            className={`mt-2 text-sm font-semibold ${
+            className={`mt-2 text-sm font-outfit-semibold ${
               type === "translation" ? "text-mine-white" : "text-mine-muted"
             }`}
           >
@@ -117,7 +117,7 @@ export default function FeedbackScreen() {
 
       {type === "bug" ? (
         <>
-          <Text className="mb-2 text-xs font-bold tracking-widest text-mine-muted">
+          <Text className="mb-2 text-xs tracking-widest font-outfit-bold text-mine-muted">
             DETAILS
           </Text>
           <TextInput
@@ -132,15 +132,15 @@ export default function FeedbackScreen() {
         </>
       ) : (
         <View className="p-5 border rounded-card border-mine-border bg-mine-card">
-          <Text className="text-xl font-bold text-mine-white">
+          <Text className="text-xl font-outfit-bold text-mine-white">
             Lyric Suggestion
           </Text>
-          <Text className="mt-2 text-sm leading-5 text-mine-muted">
+          <Text className="mt-2 text-sm leading-5 font-outfit-medium text-mine-muted">
             Only English translations are supported for now. Ensure your lyrics
             contain time stamps, e.g. [00:12.00]
           </Text>
 
-          <Text className="mt-5 mb-2 text-sm font-semibold text-mine-white">
+          <Text className="mt-5 mb-2 text-sm font-outfit-semibold text-mine-white">
             Song Title
           </Text>
           <TextInput
@@ -151,7 +151,7 @@ export default function FeedbackScreen() {
             placeholderTextColor="#71717A"
           />
 
-          <Text className="mt-4 mb-2 text-sm font-semibold text-mine-white">
+          <Text className="mt-4 mb-2 text-sm font-outfit-semibold text-mine-white">
             Artist
           </Text>
           <TextInput
@@ -162,7 +162,7 @@ export default function FeedbackScreen() {
             placeholderTextColor="#71717A"
           />
 
-          <Text className="mt-4 mb-2 text-sm font-semibold text-mine-white">
+          <Text className="mt-4 mb-2 text-sm font-outfit-semibold text-mine-white">
             Lyrics
           </Text>
           <TextInput
@@ -182,7 +182,7 @@ export default function FeedbackScreen() {
         className="items-center py-4 mt-6 rounded-pill shadow-glow"
         style={{ backgroundColor: accentColor }}
       >
-        <Text className="text-lg font-bold text-mine-bg">Submit Feedback</Text>
+        <Text className="text-lg font-outfit-bold text-mine-bg">Submit Feedback</Text>
       </TouchableOpacity>
     </ScrollView>
   );
