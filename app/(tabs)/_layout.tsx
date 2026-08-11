@@ -1,24 +1,27 @@
 import { Tabs } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useTheme } from "../../hooks/useTheme";
 
 export default function TabLayout() {
+  const { accentColor } = useTheme();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
           backgroundColor: "#121212",
-          borderTopColor: "#22C55E",
+          borderTopColor: accentColor,
           borderTopWidth: 1,
           height: 72,
           paddingBottom: 10,
           paddingTop: 8,
         },
-        tabBarActiveTintColor: "#22C55E",
+        tabBarActiveTintColor: accentColor,
         tabBarInactiveTintColor: "#71717A",
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: "600",
+          fontFamily: "Outfit_600SemiBold",
           marginTop: 2,
         },
       }}
@@ -28,7 +31,11 @@ export default function TabLayout() {
         options={{
           title: "Now Playing",
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="music-circle" size={size + 2} color={color} />
+            <MaterialCommunityIcons
+              name="music-circle"
+              size={size + 2}
+              color={color}
+            />
           ),
         }}
       />
@@ -37,7 +44,11 @@ export default function TabLayout() {
         options={{
           title: "Feedback",
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="message-text-outline" size={size} color={color} />
+            <MaterialCommunityIcons
+              name="message-text-outline"
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
@@ -46,7 +57,11 @@ export default function TabLayout() {
         options={{
           title: "Settings",
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="cog-outline" size={size} color={color} />
+            <MaterialCommunityIcons
+              name="cog-outline"
+              size={size}
+              color={color}
+            />
           ),
         }}
       />

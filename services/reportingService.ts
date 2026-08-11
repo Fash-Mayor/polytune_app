@@ -23,7 +23,7 @@ export const ReportingService = {
       
       if (!song) {
         // If it still fails, this log will show you exactly what text mismatch occurred
-        throw new Error(`Track target match failed. Verify that your DB record matches exactly.`);
+        throw new Error(`Track target match failed. Track lyrics does not exist in the DB.`);
       }
 
       // 4. Insert the report
