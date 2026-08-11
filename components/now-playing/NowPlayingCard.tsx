@@ -3,6 +3,7 @@ import { FontAwesome } from "@expo/vector-icons";
 import { isValidAlbumArtUri, PLACEHOLDER_ART } from "../../utils/albumArt";
 import { formatMs } from "../../utils/formatTime";
 import type { CurrentTrack } from "../../types/media";
+import { useTheme } from "../../hooks/useTheme";
 
 type NowPlayingCardProps = {
   track: CurrentTrack | null;
@@ -29,10 +30,11 @@ export function NowPlayingCard({
 }: NowPlayingCardProps) {
   const hasArt = isValidAlbumArtUri(track?.albumArt);
   const progress = durationMs > 0 ? Math.min(positionMs / durationMs, 1) : 0;
+  const { accentColor } = useTheme();
 
   return (
     <View
-      className="mx-4 rounded-card border border-mine-border bg-mine-card"
+      className="mx-4 border rounded-card border-mine-border bg-mine-card"
       style={{ padding }}
     >
       <View className="items-center">
@@ -54,14 +56,14 @@ export function NowPlayingCard({
         />
 
         <Text
-          className="text-center font-bold text-mine-white"
+          className="font-sans text-center text-mine-white"
           style={{ fontSize: isCompact ? 18 : 22, marginBottom: 4 }}
           numberOfLines={2}
         >
           {track?.title ?? "No track detected"}
         </Text>
         <Text
-          className="text-center text-mine-muted"
+          className="font-sans text-center text-mine-muted"
           style={{
             fontSize: isCompact ? 13 : 15,
             marginBottom: isCompact ? 10 : 16,
@@ -73,13 +75,16 @@ export function NowPlayingCard({
 
         <View className="mb-1.5 h-1.5 w-full overflow-hidden rounded-full bg-mine-border">
           <View
-            className="h-full rounded-full bg-mine-primary"
-            style={{ width: `${progress * 100}%` }}
+            className="h-full rounded-full"
+            style={{
+              width: `${progress * 100}%`,
+              backgroundColor: accentColor,
+            }}
           />
         </View>
 
         <View
-          className="w-full flex-row justify-between"
+          className="flex-row justify-between w-full"
           style={{ marginBottom: isCompact ? 10 : 16 }}
         >
           <Text className="text-xs text-mine-muted">

@@ -1,5 +1,6 @@
 import { Text, TouchableOpacity, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useTheme } from "../../hooks/useTheme";
 
 type PrimaryActionButtonProps = {
   hasTrack: boolean;
@@ -12,11 +13,16 @@ export function PrimaryActionButton({
   onPress,
   compact = false,
 }: PrimaryActionButtonProps) {
+  const { accentColor } = useTheme();
+
   return (
     <TouchableOpacity
       onPress={onPress}
-      className="mx-4 flex-row items-center justify-center rounded-pill bg-mine-primary shadow-glow"
-      style={{ paddingVertical: compact ? 13 : 16 }}
+      className="flex-row items-center justify-center mx-4 rounded-pill shadow-glow"
+      style={{
+        paddingVertical: compact ? 13 : 16,
+        backgroundColor: accentColor,
+      }}
       accessibilityLabel={hasTrack ? "View lyrics" : "Check what's playing"}
     >
       <MaterialCommunityIcons
@@ -26,7 +32,7 @@ export function PrimaryActionButton({
         style={{ marginRight: 10 }}
       />
       <Text
-        className="font-bold text-mine-bg"
+        className="font-outfit-semibold text-mine-bg"
         style={{ fontSize: compact ? 16 : 18 }}
       >
         {hasTrack ? "View Lyrics" : "Check What's Playing"}
