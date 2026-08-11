@@ -91,19 +91,19 @@ export function LyricsList({
             }}
           >
             <Text
-              className={`text-[25px] font-bold leading-9 ${
+              className={`text-[25px] font-outfit-semibold leading-9 pb-4 ${
                 isActive ? "text-mine-white" : "text-mine-muted"
               }`}
               style={{
                 opacity: isActive ? 1.0 : 0.3,
-                color: isActive ? accentColor : undefined,
+                ...(isActive ? { color: accentColor } : {}), // Only applies color if active
               }}
             >
               {original}
             </Text>
             {line.tr ? (
               <Text
-                className={`mt-1 text-[21px] font-medium leading-5 pb-3  ${
+                className={`mt-1 text-[21px] font-outfit-medium leading-7 pb-3  ${
                   isActive ? "text-mine-white" : "text-mine-muted"
                 }`}
                 style={{ opacity: isActive ? 1.0 : 0.3 }}

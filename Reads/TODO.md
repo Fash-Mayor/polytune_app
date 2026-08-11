@@ -11,18 +11,21 @@
 - UI upgrade✅
 - feedback page also adds the feedback to supabase✅
 - might need to add a splash screen✅
-- font❌
-- sync issue message for unsaved tracks, change theme setting
+- fonts
+- sync issue message for unsaved tracks (from alerts to modal)
+- change theme setting
 - make ui redering .tsx files light
 - add YTM to edge func
 - Install JS packages for romanization
 - AI fallback
-- skipping forward & going back (changing song)
+- skipping forward & going back (changing song) (pause mo play mo)
 - Authentication (login should percist)
 - analytics for Person
 - karaoke mode
+- user should be able to chose what line comes first (o&r or tr)
 - OTA updates check w (app analytics)
--->> 
+- song image still don't update on change
+-->> after school,
 -->>
 - Settings/Profile page (w legals (T&C, PP))
 - Paywall (RevenueCAT)
@@ -83,9 +86,11 @@ how to preview befor pushing OTA: Expo go don't work (yet)
 ## Shower Thoughts
 - Add a feature where users can see translated song?
 - "All community-cached translations are completely free to stream forever. Want to translate a brand new track? Use an AI Credit or upgrade to Pro."
-- "You translated" w filter for "recently translated"
+- "You translated" w filter for "recently translated"❌
 - Might ned to modify the prompt given to gem and llama (cultural and deep meaning can be pro)
 
-** Edge Func Todo's:
-❌ Zero Protection / No Paywall Enforcement: This is the biggest issue. This function does not inspect the user's authorization token or check their account status. Anyone who finds this endpoint URL can spam it infinitely, burn your AI keys, and bypass your "1 free song per day" strategy completely. It needs to check the user's profile table for their subscription status or token balance before executing.❌ The "Plain Lyrics" Sync Trap: Your code falls back to raw lyrics from lyrics.ovh or plain text from LRCLIB if synced lyrics aren't found. If the source lyrics don't have timestamps, your prompt tells Gemini to output [timecode]|.... Because the AI has no time reference, it will completely hallucinate timestamps, causing the lyrics to be drastically out of sync on the user's phone.  ❌ Brittle String Cache Misses: The database check uses an exact match: .eq("title", trackTitle).eq("artist", artistName). If Spotify passes a title with slight variations like "Lose Yourself - Bonus Track" or trailing whitespaces, your database will count it as a cache miss, forcing an expensive and unnecessary AI call. You need to strip common suffixes and trim strings before checking the cache.  ❌ Groq Stream Fragmentation Bug: Your Gemini SDK handles chunk buffering automatically, but your manual Groq fetch stream splits chunks blindly using chunk.split("\n"). If a JSON data line gets cut in half across two incoming network packets, JSON.parse will crash mid-stream and drop lines of lyrics.  ❌ Timeout Mismatch: Your code comment says // Instantly cut off hang ups at 2 seconds, but the code actually passes AbortSignal.timeout(10000) (10 seconds). Leaving a connection hanging for 10 seconds on an external API call will make the app feel incredibly sluggish to the end-user.  
+**Edge Func Todo's:**
+❌ Zero Protection / No Paywall Enforcement: This is the biggest issue. This function does not inspect the user's authorization token or check their account status. Anyone who finds this endpoint URL can spam it infinitely, burn your AI keys, and bypass your "1 free song per day" strategy completely. It needs to check the user's profile table for their subscription status or token balance before executing.
+❌ The "Plain Lyrics" Sync Trap: Your code falls back to raw lyrics from lyrics.ovh or plain text from LRCLIB if synced lyrics aren't found. If the source lyrics don't have timestamps, your prompt tells Gemini to output [timecode]|.... Because the AI has no time reference, it will completely hallucinate timestamps, causing the lyrics to be drastically out of sync on the user's phone.  
+❌ Brittle String Cache Misses: The database check uses an exact match: .eq("title", trackTitle).eq("artist", artistName). If Spotify passes a title with slight variations like "Lose Yourself - Bonus Track" or trailing whitespaces, your database will count it as a cache miss, forcing an expensive and unnecessary AI call. You need to strip common suffixes and trim strings before checking the cache.  
 -->> 

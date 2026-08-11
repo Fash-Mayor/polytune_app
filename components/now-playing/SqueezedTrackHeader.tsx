@@ -51,10 +51,10 @@ export function SqueezedTrackHeader({
       />
 
       <View className="flex-1 min-w-0">
-        <Text className="text-sm font-bold text-mine-white" numberOfLines={1}>
+        <Text className="text-sm font-outfit-semibold text-mine-white" numberOfLines={1}>
           {track?.title ?? "Unknown track"}
         </Text>
-        <Text className="text-xs text-mine-muted" numberOfLines={1}>
+        <Text className="font-sans text-xs text-mine-muted" numberOfLines={1}>
           {track?.artist ?? "Unknown artist"}
         </Text>
       </View>

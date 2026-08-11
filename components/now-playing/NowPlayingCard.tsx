@@ -34,7 +34,7 @@ export function NowPlayingCard({
 
   return (
     <View
-      className="mx-4 rounded-card border border-mine-border bg-mine-card"
+      className="mx-4 border rounded-card border-mine-border bg-mine-card"
       style={{ padding }}
     >
       <View className="items-center">
@@ -56,14 +56,14 @@ export function NowPlayingCard({
         />
 
         <Text
-          className="text-center font-bold text-mine-white"
+          className="font-sans text-center text-mine-white"
           style={{ fontSize: isCompact ? 18 : 22, marginBottom: 4 }}
           numberOfLines={2}
         >
           {track?.title ?? "No track detected"}
         </Text>
         <Text
-          className="text-center text-mine-muted"
+          className="font-sans text-center text-mine-muted"
           style={{
             fontSize: isCompact ? 13 : 15,
             marginBottom: isCompact ? 10 : 16,
@@ -84,7 +84,7 @@ export function NowPlayingCard({
         </View>
 
         <View
-          className="w-full flex-row justify-between"
+          className="flex-row justify-between w-full"
           style={{ marginBottom: isCompact ? 10 : 16 }}
         >
           <Text className="text-xs text-mine-muted">

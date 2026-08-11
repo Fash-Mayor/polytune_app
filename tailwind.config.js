@@ -26,9 +26,9 @@ module.exports = {
       },
       fontFamily: {
         sans: ["Outfit_400Regular"],
-        semibold: ["Outfit_600SemiBold"],
-        medium: ["Outfit_500Medium"],
-        bold: ["Outfit_700Bold"],
+        "outfit-semibold": ["Outfit_600SemiBold"],
+        "outfit-medium": ["Outfit_500Medium"],
+        "outfit-bold": ["Outfit_700Bold"],
       },
       borderRadius: {
         card: "20px",
