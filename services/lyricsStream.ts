@@ -3,9 +3,11 @@ import type { LyricLine } from "../types/lyrics";
 
 const SUPABASE_FUNCTION_URL =
   process.env.EXPO_PUBLIC_SUPABASE_FUNCTION_URL ?? "";
+const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
 export type LyricsStreamCallbacks = {
   onLine: (line: LyricLine) => void;
+  onMeta: (meta: { synced: boolean }) => void;
   onDone: () => void;
   onError: (message: string) => void;
 };
@@ -17,7 +19,11 @@ export function startLyricsStream(
 ): EventSource {
   const es = new EventSource(SUPABASE_FUNCTION_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
     body: JSON.stringify({ trackTitle: title, artistName: artist }),
   });
 
@@ -41,6 +47,10 @@ export function startLyricsStream(
 
       if (data.item) {
         callbacks.onLine(data.item);
+      }
+
+      if (data.meta) {
+        callbacks.onMeta(data.meta);
       }
 
       if (data.done) {

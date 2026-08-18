@@ -72,6 +72,24 @@ object MediaSessionUtils {
     dispatchMediaKey(context, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE)
   }
 
+  fun skipToNext(context: Context) {
+    val controller = MediaSessionStateHolder.activeController
+    if (controller != null) {
+      controller.transportControls.skipToNext()
+      return
+    }
+    dispatchMediaKey(context, KeyEvent.KEYCODE_MEDIA_NEXT)
+  }
+
+  fun skipToPrevious(context: Context) {
+    val controller = MediaSessionStateHolder.activeController
+    if (controller != null) {
+      controller.transportControls.skipToPrevious()
+      return
+    }
+    dispatchMediaKey(context, KeyEvent.KEYCODE_MEDIA_PREVIOUS)
+  }
+
   private fun dispatchMediaKey(context: Context, keyCode: Int) {
     val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     val downEvent = KeyEvent(KeyEvent.ACTION_DOWN, keyCode)

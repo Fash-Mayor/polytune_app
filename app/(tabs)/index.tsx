@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, AppState, Text, View } from "react-native";
+import { ActivityIndicator, AppState, Text, View } from "react-native";
 import Animated, {
   Easing,
   interpolate,
@@ -17,6 +17,7 @@ import { NowPlayingCard } from "../../components/now-playing/NowPlayingCard";
 import { PrimaryActionButton } from "../../components/now-playing/PrimaryActionButton";
 import { SqueezedTrackHeader } from "../../components/now-playing/SqueezedTrackHeader";
 import { PrivacyPermissionModal } from "../../components/PrivacyPermissionModal";
+import { SyncIssueModal } from "../../components/SyncIssueModal";
 import { useLyricsStream } from "../../hooks/useLyricsStream";
 import { useMediaSession } from "../../hooks/useMediaSession";
 import { usePlaybackPosition } from "../../hooks/usePlaybackPosition";
@@ -24,11 +25,15 @@ import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
 import {
   isNotificationAccessEnabled,
   openNotificationAccessSettings,
+  skipToNext,
+  skipToPrevious,
   togglePlayback,
 } from "../../modules/expo-ambient-listener";
 import { estimateDurationMs } from "../../utils/estimateDuration";
 import { ReportingService } from "../../services/reportingService";
 import { useTheme } from "../../hooks/useTheme";
+import { usePreferences } from "../../hooks/usePreferences";
+import { useDominantColor } from "../../hooks/useDominantColor";
 
 const TRANSITION_MS = 480;
 
@@ -36,6 +41,7 @@ export default function NowPlayingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { accentColor } = useTheme();
+  const { karaokeMode } = usePreferences();
   const progress = useSharedValue(0);
   const { isCompact, artSize, cardPadding, sectionGap, playButtonSize } =
     useResponsiveLayout();
@@ -44,6 +50,7 @@ export default function NowPlayingScreen() {
   const [isRomanized, setIsRomanized] = useState(false);
   const [resyncing, setResyncing] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showSyncIssueModal, setShowSyncIssueModal] = useState(false);
   const [lyricsVisible, setLyricsVisible] = useState(false);
   const posthog = usePostHog();
   const lastTrackedTitleRef = useRef<string | null>(null);
@@ -71,6 +78,13 @@ export default function NowPlayingScreen() {
   });
   const trackKey = track ? `${track.title}::${track.artist}` : null;
 
+  // Only extract when Karaoke Mode is actually on - no point paying for
+  // native color extraction on every track change otherwise.
+  const dominantColor = useDominantColor(
+    karaokeMode ? track?.albumArt : undefined,
+  );
+  const lyricsBackgroundColor = karaokeMode ? dominantColor : "#121212";
+
   useEffect(() => {
     if (!track?.title) {
       lastTrackedTitleRef.current = null;
@@ -85,7 +99,7 @@ export default function NowPlayingScreen() {
     });
   }, [posthog, track?.title]);
 
-  const { lyricsData, fetchingLyrics, refetch } = useLyricsStream(
+  const { lyricsData, fetchingLyrics, isSynced, refetch } = useLyricsStream(
     listeningEnabled ? track?.title : undefined,
     listeningEnabled ? track?.artist : undefined,
   );
@@ -142,34 +156,13 @@ export default function NowPlayingScreen() {
   };
 
   const handleSyncIssue = () => {
-    const title = track?.title ?? "Unknown track";
-    const artist = track?.artist ?? "Unknown artist";
+    if (!track?.title || !track?.artist) return;
+    setShowSyncIssueModal(true);
+  };
 
-    Alert.alert(
-      "Report Sync Issue",
-      `Do you want to report a sync or translation issue for "${title}" by ${artist}?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Yes, Report",
-          onPress: async () => {
-            if (!track?.title || !track?.artist) return;
-
-            try {
-              // Call the abstracted service method
-              await ReportingService.reportSyncIssue(track.title, track.artist);
-
-              Alert.alert(
-                "Thank You!",
-                "The sync issue has been logged for correction.",
-              );
-            } catch (err: any) {
-              Alert.alert("Submission Error", err.message);
-            }
-          },
-        },
-      ],
-    );
+  const handleSubmitSyncIssue = async (note: string) => {
+    if (!track?.title || !track?.artist) return;
+    await ReportingService.reportSyncIssue(track.title, track.artist, note);
   };
 
   const handleTogglePlayback = async () => {
@@ -177,6 +170,22 @@ export default function NowPlayingScreen() {
       await togglePlayback();
     } catch (error) {
       console.error("togglePlayback failed:", error);
+    }
+  };
+
+  const handleSkipNext = async () => {
+    try {
+      await skipToNext();
+    } catch (error) {
+      console.error("skipToNext failed:", error);
+    }
+  };
+
+  const handleSkipPrevious = async () => {
+    try {
+      await skipToPrevious();
+    } catch (error) {
+      console.error("skipToPrevious failed:", error);
     }
   };
 
@@ -240,6 +249,8 @@ export default function NowPlayingScreen() {
             positionMs={playbackPositionMs}
             durationMs={durationMs}
             onTogglePlayback={handleTogglePlayback}
+            onSkipNext={handleSkipNext}
+            onSkipPrevious={handleSkipPrevious}
             artSize={artSize}
             padding={cardPadding}
             playButtonSize={playButtonSize}
@@ -269,6 +280,9 @@ export default function NowPlayingScreen() {
               left: 0,
               right: 0,
               bottom: 0,
+              // Karaoke Mode: themed by the album art's dominant color
+              // instead of flat black. Falls back to mine-bg when off.
+              backgroundColor: lyricsBackgroundColor,
             },
           ]}
           className="z-10"
@@ -276,7 +290,7 @@ export default function NowPlayingScreen() {
           {showLoading ? (
             <View className="items-center justify-center flex-1">
               <ActivityIndicator size="large" color={accentColor} />
-              <Text className="mt-4 text-sm italic text-mine-muted">
+              <Text className="mt-4 text-sm italic font-sans text-mine-muted">
                 Streaming translations from cloud...
               </Text>
             </View>
@@ -285,10 +299,12 @@ export default function NowPlayingScreen() {
               lyricsData={lyricsData}
               playbackPositionMs={playbackPositionMs}
               isRomanized={isRomanized}
+              isSynced={isSynced}
+              karaokeMode={karaokeMode}
             />
           ) : (
             <View className="items-center justify-center flex-1 px-8">
-              <Text className="text-base text-center text-mine-muted">
+              <Text className="text-base text-center font-sans text-mine-muted">
                 {track
                   ? "No lyrics found for this track. Tap sync to retry."
                   : "Start playing music to see synced lyrics."}
@@ -311,6 +327,14 @@ export default function NowPlayingScreen() {
           setShowPrivacyModal(false);
           await openNotificationAccessSettings();
         }}
+      />
+
+      <SyncIssueModal
+        visible={showSyncIssueModal}
+        trackTitle={track?.title ?? "Unknown track"}
+        trackArtist={track?.artist ?? "Unknown artist"}
+        onClose={() => setShowSyncIssueModal(false)}
+        onSubmit={handleSubmitSyncIssue}
       />
     </View>
   );

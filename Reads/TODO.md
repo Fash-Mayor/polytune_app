@@ -81,7 +81,8 @@ npx expo run:android --variant release
 ### eas update --channel production --message "OTA Testo ichi"
 how to preview befor pushing OTA: Expo go don't work (yet)
 ## Ato de
- - Maybe I'll put my app in ProductHunt..?
+- Unsynced lyrics (?)
+- Maybe I'll put my app in ProductHunt..?
 
 ## Shower Thoughts
 - Add a feature where users can see translated song?
@@ -94,3 +95,7 @@ how to preview befor pushing OTA: Expo go don't work (yet)
 ❌ The "Plain Lyrics" Sync Trap: Your code falls back to raw lyrics from lyrics.ovh or plain text from LRCLIB if synced lyrics aren't found. If the source lyrics don't have timestamps, your prompt tells Gemini to output [timecode]|.... Because the AI has no time reference, it will completely hallucinate timestamps, causing the lyrics to be drastically out of sync on the user's phone.  
 ❌ Brittle String Cache Misses: The database check uses an exact match: .eq("title", trackTitle).eq("artist", artistName). If Spotify passes a title with slight variations like "Lose Yourself - Bonus Track" or trailing whitespaces, your database will count it as a cache miss, forcing an expensive and unnecessary AI call. You need to strip common suffixes and trim strings before checking the cache.  
 -->> 
+
+
+Add lang to lang!
+so we've installed the things we ned for the future updates into the app so they can just be coming as OTA. Let's proceed to step...

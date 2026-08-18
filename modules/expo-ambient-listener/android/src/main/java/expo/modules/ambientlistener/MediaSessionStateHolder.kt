@@ -24,10 +24,32 @@ object MediaSessionStateHolder {
   private val handler = Handler(Looper.getMainLooper())
   private var retryRunnable: Runnable? = null
 
+  // Most recent Notification seen for the CURRENT track, kept so paths that
+  // only have a MediaController (the manual "resync" button, and the
+  // system's OnActiveSessionsChangedListener) can still fall back to its
+  // large icon - not just the auto-retry below. Without this, any app that
+  // only ever attaches art to the notification's large icon (never to
+  // MediaMetadata's bitmap/URI fields) could never recover art through
+  // those paths, even though the service saw a usable icon earlier.
+  // Scoped to `lastNotificationTitle == title` so a stale notification can
+  // never leak the *previous* track's art onto a new one.
+  @Volatile private var lastNotification: Notification? = null
+  @Volatile private var lastNotificationTitle: String? = null
+
+  private const val ART_RETRY_DELAY_MS = 600L
+  // One-shot 600ms wasn't enough for apps that attach real MediaMetadata
+  // art asynchronously, well after the initial notification post - this
+  // gives ~3s of re-checking controller.metadata before giving up.
+  private const val ART_RETRY_MAX_ATTEMPTS = 5
+
   fun updateFromController(
-    controller: MediaController, 
+    controller: MediaController,
     notification: Notification? = null,
-    onRetryDispatch: (() -> Unit)? = null
+    retryAttempt: Int = 0,
+    // Must stay the LAST parameter: callers invoke this with Kotlin's
+    // trailing-lambda syntax (`updateFromController(controller, notif) { ... }`),
+    // which only binds to a function-typed parameter when it's literally last.
+    onRetryDispatch: (() -> Unit)? = null,
   ) {
     // 1. Cancel pending retries immediately to avoid race conditions if tracks are skipped rapidly
     retryRunnable?.let { handler.removeCallbacks(it) }
@@ -46,6 +68,12 @@ object MediaSessionStateHolder {
     title = incomingTitle ?: title
     artist = incomingArtist ?: artist
 
+    if (notification != null) {
+      lastNotification = notification
+      lastNotificationTitle = title
+    }
+    val notificationForArt = if (lastNotificationTitle == title) lastNotification else null
+
     // 3. Smart Artwork Resolution Pipeline
     var artFound = false
     val artBitmap = metadata?.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART)
@@ -62,8 +90,8 @@ object MediaSessionStateHolder {
         albumArtUri = artUriStr
         artFound = true
       } else {
-        // Fallback: Check the system notification itself for a large icon bitmap
-        val notifBitmap = extractBitmapFromNotification(notification)
+        // Fallback: Check the (possibly cached) notification for a large icon bitmap
+        val notifBitmap = extractBitmapFromNotification(notificationForArt)
         if (notifBitmap != null) {
           albumArtUri = bitmapToDataUri(notifBitmap)
           artFound = true
@@ -73,18 +101,31 @@ object MediaSessionStateHolder {
       }
     }
 
-    // 4. Delayed Auto-Fetch: If art is still missing, poll again in 600ms
-    if (!artFound && !title.isNullOrBlank() && onRetryDispatch != null) {
+    // 4. Delayed Auto-Fetch: If art is still missing, poll again - re-checks
+    // controller.metadata fresh each time, since the player app may attach
+    // real art to the MediaSession asynchronously after this first check.
+    if (!artFound && !title.isNullOrBlank() && onRetryDispatch != null && retryAttempt < ART_RETRY_MAX_ATTEMPTS) {
       retryRunnable = Runnable {
-        updateFromController(controller, null, null)
+        updateFromController(controller, null, retryAttempt + 1, onRetryDispatch)
         onRetryDispatch.invoke() // Send fresh event payload to React Native UI
       }
-      handler.postDelayed(retryRunnable!!, 600)
+      handler.postDelayed(retryRunnable!!, ART_RETRY_DELAY_MS)
     }
 
     // 5. Commit playback states
     val state = playbackState?.state ?: PlaybackState.STATE_NONE
-    isPlaying = state == PlaybackState.STATE_PLAYING
+    // A track skip briefly reports STATE_BUFFERING/STATE_SKIPPING_TO_* before
+    // settling back to STATE_PLAYING on the new track - treating only those
+    // as "not playing" flashed the play/pause button to paused-and-back on
+    // every skip. Only a genuine pause/stop should read as not-playing.
+    isPlaying = when (state) {
+      PlaybackState.STATE_PLAYING,
+      PlaybackState.STATE_BUFFERING,
+      PlaybackState.STATE_SKIPPING_TO_NEXT,
+      PlaybackState.STATE_SKIPPING_TO_PREVIOUS,
+      PlaybackState.STATE_SKIPPING_TO_QUEUE_ITEM -> true
+      else -> false
+    }
 
     val position = playbackState?.position ?: lastPositionMs
     updatePosition(position)
