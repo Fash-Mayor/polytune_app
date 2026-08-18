@@ -39,9 +39,6 @@
         "expo-channel-name": "production"
       }
     },
-    "ios": {
-      "supportsTablet": true
-    },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#000000",

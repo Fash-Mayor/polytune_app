@@ -7,9 +7,11 @@ import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import type { LyricLine } from "../../types/lyrics";
 import { findActiveLineIndex } from "../../utils/lyricSync";
 import { useTheme } from "../../hooks/useTheme";
+import { LyricLine as LyricLineRow } from "./LyricLine";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 // Fine-tuned offset for perfect vertical centering alignment
@@ -19,12 +21,21 @@ type LyricsListProps = {
   lyricsData: LyricLine[];
   playbackPositionMs: number;
   isRomanized: boolean;
+  /** False for unsynced sources (e.g. lyrics.ovh) - their `timeMs` is just a
+   * sort-order index, not a real playback position, so highlighting/
+   * auto-scrolling against it would be meaningless (or actively wrong). */
+  isSynced?: boolean;
+  /** Karaoke Mode: pop/glow the active line. No-ops naturally when unsynced,
+   * since there's never a highlighted line to pop/glow without real timing. */
+  karaokeMode?: boolean;
 };
 
 export function LyricsList({
   lyricsData,
   playbackPositionMs,
   isRomanized,
+  isSynced = true,
+  karaokeMode = false,
 }: LyricsListProps) {
   const { accentColor } = useTheme();
   const scrollViewRef = useRef<ScrollView>(null);
@@ -33,11 +44,12 @@ export function LyricsList({
   const isUserScrolling = useRef(false);
 
   const activeIndex = useMemo(
-    () => findActiveLineIndex(lyricsData, playbackPositionMs),
-    [lyricsData, playbackPositionMs],
+    () => (isSynced ? findActiveLineIndex(lyricsData, playbackPositionMs) : -1),
+    [isSynced, lyricsData, playbackPositionMs],
   );
 
   useEffect(() => {
+    if (!isSynced) return;
     if (activeIndex === -1) return;
     if (isUserScrolling.current) return;
     if (lastScrolledIndex.current === activeIndex) return;
@@ -76,42 +88,38 @@ export function LyricsList({
         isUserScrolling.current = false;
       }}
     >
+      {!isSynced ? (
+        <View className="flex-row items-center self-center px-3 py-1.5 mb-6 border rounded-pill border-mine-border bg-mine-card">
+          <MaterialCommunityIcons name="sync-off" size={14} color={accentColor} />
+          <Text className="ml-1.5 text-xs font-outfit-semibold text-mine-muted">
+            Unsynced Lyrics
+          </Text>
+        </View>
+      ) : null}
       {lyricsData.map((line, index) => {
-        const isActive = index === activeIndex;
+        // Unsynced lyrics have no notion of a "current" line: don't dim any
+        // line (there's nothing to dim it *against*), but don't accent-color
+        // every line either - that's reserved for "this is playing right
+        // now", which isn't a claim we can make without real timestamps.
+        const isHighlighted = isSynced && index === activeIndex;
+        const isDimmed = isSynced && !isHighlighted;
         const lineKey = `${line.timeMs}-${line.o}`;
         const original = isRomanized && line.r ? line.r : line.o;
 
         return (
-          <View
+          <LyricLineRow
             key={lineKey}
-            className="mb-8"
+            original={original}
+            translation={line.tr || null}
+            isHighlighted={isHighlighted}
+            isDimmed={isDimmed}
+            karaokeMode={karaokeMode}
+            accentColor={accentColor}
             onLayout={(event) => {
               // Cache immutable layout targets strictly to bypass recalculations
               lyricPositions.current[index] = event.nativeEvent.layout.y;
             }}
-          >
-            <Text
-              className={`text-[25px] font-outfit-semibold leading-9 pb-4 ${
-                isActive ? "text-mine-white" : "text-mine-muted"
-              }`}
-              style={{
-                opacity: isActive ? 1.0 : 0.3,
-                ...(isActive ? { color: accentColor } : {}), // Only applies color if active
-              }}
-            >
-              {original}
-            </Text>
-            {line.tr ? (
-              <Text
-                className={`mt-1 text-[21px] font-outfit-medium leading-7 pb-3  ${
-                  isActive ? "text-mine-white" : "text-mine-muted"
-                }`}
-                style={{ opacity: isActive ? 1.0 : 0.3 }}
-              >
-                {line.tr}
-              </Text>
-            ) : null}
-          </View>
+          />
         );
       })}
     </ScrollView>

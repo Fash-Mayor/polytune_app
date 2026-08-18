@@ -4,10 +4,10 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import "../global.css";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
-import { Text, TextInput } from "react-native";
 import { useFonts } from "expo-font";
 import { PostHogProvider } from "posthog-react-native";
 import { ThemeProvider } from "../providers/ThemeProvider";
+import { PreferencesProvider } from "../providers/PreferencesProvider";
 
 SplashScreen.preventAutoHideAsync(); // Prevent the splash screen from auto-hiding
 
@@ -25,30 +25,6 @@ export default function RootLayout() {
     }
   }, [fontsLoaded]);
 
-  useEffect(() => {
-    const textComponent = Text as typeof Text & {
-      defaultProps?: { style?: unknown };
-    };
-    const textInputComponent = TextInput as typeof TextInput & {
-      defaultProps?: { style?: unknown };
-    };
-
-    textComponent.defaultProps = {
-      ...(textComponent.defaultProps ?? {}),
-      style: [
-        { fontFamily: "Outfit_400Regular" },
-        textComponent.defaultProps?.style,
-      ],
-    };
-    textInputComponent.defaultProps = {
-      ...(textInputComponent.defaultProps ?? {}),
-      style: [
-        { fontFamily: "Outfit_400Regular" },
-        textInputComponent.defaultProps?.style,
-      ],
-    };
-  }, []);
-
   return (
     <PostHogProvider
       apiKey={process.env.EXPO_PUBLIC_POSTHOG_KEY!}
@@ -59,18 +35,20 @@ export default function RootLayout() {
       }}
     >
       <ThemeProvider>
-        <SafeAreaProvider>
-          <StatusBar style="light" />
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: "#121212" },
-            }}
-          >
-            <Stack.Screen name="index" />
-            <Stack.Screen name="(tabs)" />
-          </Stack>
-        </SafeAreaProvider>
+        <PreferencesProvider>
+          <SafeAreaProvider>
+            <StatusBar style="light" />
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: "#121212" },
+              }}
+            >
+              <Stack.Screen name="index" />
+              <Stack.Screen name="(tabs)" />
+            </Stack>
+          </SafeAreaProvider>
+        </PreferencesProvider>
       </ThemeProvider>
     </PostHogProvider>
   );

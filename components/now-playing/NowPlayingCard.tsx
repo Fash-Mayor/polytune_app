@@ -11,6 +11,8 @@ type NowPlayingCardProps = {
   positionMs: number;
   durationMs: number;
   onTogglePlayback: () => void;
+  onSkipNext?: () => void;
+  onSkipPrevious?: () => void;
   artSize: number;
   padding: number;
   playButtonSize: number;
@@ -23,6 +25,8 @@ export function NowPlayingCard({
   positionMs,
   durationMs,
   onTogglePlayback,
+  onSkipNext,
+  onSkipPrevious,
   artSize,
   padding,
   playButtonSize,
@@ -95,20 +99,42 @@ export function NowPlayingCard({
           </Text>
         </View>
 
-        <TouchableOpacity
-          onPress={onTogglePlayback}
-          disabled={!track}
-          className="items-center justify-center rounded-full bg-mine-white"
-          style={{ width: playButtonSize, height: playButtonSize }}
-          accessibilityLabel={isPlaying ? "Pause" : "Play"}
-        >
-          <FontAwesome
-            name={isPlaying ? "pause" : "play"}
-            size={isCompact ? 20 : 24}
-            color="#121212"
-            style={isPlaying ? undefined : { marginLeft: 4 }}
-          />
-        </TouchableOpacity>
+        <View className="flex-row items-center justify-center" style={{ gap: isCompact ? 20 : 28 }}>
+          <TouchableOpacity
+            onPress={onSkipPrevious}
+            disabled={!track || !onSkipPrevious}
+            className="items-center justify-center"
+            style={{ width: playButtonSize * 0.6, height: playButtonSize * 0.6, opacity: track ? 1 : 0.4 }}
+            accessibilityLabel="Previous track"
+          >
+            <FontAwesome name="step-backward" size={isCompact ? 18 : 20} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={onTogglePlayback}
+            disabled={!track}
+            className="items-center justify-center rounded-full bg-mine-white"
+            style={{ width: playButtonSize, height: playButtonSize }}
+            accessibilityLabel={isPlaying ? "Pause" : "Play"}
+          >
+            <FontAwesome
+              name={isPlaying ? "pause" : "play"}
+              size={isCompact ? 20 : 24}
+              color="#121212"
+              style={isPlaying ? undefined : { marginLeft: 4 }}
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={onSkipNext}
+            disabled={!track || !onSkipNext}
+            className="items-center justify-center"
+            style={{ width: playButtonSize * 0.6, height: playButtonSize * 0.6, opacity: track ? 1 : 0.4 }}
+            accessibilityLabel="Next track"
+          >
+            <FontAwesome name="step-forward" size={isCompact ? 18 : 20} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
