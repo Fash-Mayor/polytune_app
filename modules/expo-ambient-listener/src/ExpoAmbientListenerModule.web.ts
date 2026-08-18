@@ -3,12 +3,18 @@ import type { MediaEvent } from "../../types/media";
 
 class ExpoAmbientListenerModule extends NativeModule<{
   togglePlayback: () => Promise<void>;
+  skipToNext: () => Promise<void>;
+  skipToPrevious: () => Promise<void>;
   getCurrentPlaybackPosition: () => Promise<number>;
   refreshActiveSession: () => Promise<MediaEvent>;
   isNotificationAccessEnabled: () => Promise<boolean>;
   openNotificationAccessSettings: () => Promise<void>;
 }> {
   async togglePlayback(): Promise<void> {}
+
+  async skipToNext(): Promise<void> {}
+
+  async skipToPrevious(): Promise<void> {}
 
   async getCurrentPlaybackPosition(): Promise<number> {
     return 0;

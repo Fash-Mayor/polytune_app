@@ -127,6 +127,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isLoaded) return;
+    // Disco mode randomizes accentColor ~every 900ms (below) - persisting on
+    // every tick would hammer AsyncStorage indefinitely while it's active.
+    // The "disco" mode selection itself is already persisted once, in
+    // setThemeMode, when the user picks it.
+    if (themeMode === "disco") return;
     void persistTheme(themeMode, accentColor);
   }, [accentColor, isLoaded, persistTheme, themeMode]);
 

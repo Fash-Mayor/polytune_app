@@ -89,7 +89,7 @@ export default function WelcomeScreen() {
         />
 
         <Text
-          className="font-bold text-center text-mine-white"
+          className="font-outfit-bold text-center text-mine-white"
           style={{ fontSize: isCompact ? 36 : 42, letterSpacing: 0.5 }}
         >
           PolyTune
@@ -114,12 +114,12 @@ export default function WelcomeScreen() {
           accessibilityLabel="Start listening"
         >
           <MaterialCommunityIcons name="headphones" size={22} color="#121212" />
-          <Text className="ml-2 text-lg font-bold text-mine-bg">
+          <Text className="ml-2 text-lg font-outfit-bold text-mine-bg">
             Start Listening
           </Text>
         </TouchableOpacity>
 
-        <Text className="mt-4 text-center text-[10px] font-semibold uppercase tracking-[1.5px] text-mine-dim">
+        <Text className="mt-4 text-center text-[10px] font-outfit-semibold uppercase tracking-[1.5px] text-mine-dim">
           Secure connection via Android media session
         </Text>
       </View>

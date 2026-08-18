@@ -31,6 +31,20 @@ class ExpoAmbientListenerModule : Module() {
       }
     }
 
+    AsyncFunction("skipToNext") {
+      val context = appContext.reactContext
+      if (context != null) {
+        MediaSessionUtils.skipToNext(context)
+      }
+    }
+
+    AsyncFunction("skipToPrevious") {
+      val context = appContext.reactContext
+      if (context != null) {
+        MediaSessionUtils.skipToPrevious(context)
+      }
+    }
+
     AsyncFunction("getCurrentPlaybackPosition") {
       MediaSessionStateHolder.getCurrentPositionMs()
     }

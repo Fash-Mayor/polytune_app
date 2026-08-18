@@ -35,7 +35,7 @@ export function PrivacyPermissionModal({
               />
             </View>
             <Text
-              className="text-xl font-bold text-center text-mine-primary"
+              className="text-xl font-outfit-bold text-center text-mine-primary"
               style={{ color: accentColor }}
             >
               Privacy & Connection Security
@@ -60,7 +60,7 @@ export function PrivacyPermissionModal({
               </View>
               <View className="flex-1">
                 <Text
-                  className="mb-1 text-sm font-bold text-mine-primary"
+                  className="mb-1 text-sm font-outfit-bold text-mine-primary"
                   style={{ color: accentColor }}
                 >
                   What We Access & Sync
@@ -83,16 +83,16 @@ export function PrivacyPermissionModal({
                 />
               </View>
               <View className="flex-1">
-                <Text className="mb-1 text-sm font-bold text-red-400">
+                <Text className="mb-1 text-sm font-outfit-bold text-red-400">
                   Strict Privacy — What We CANNOT See
                 </Text>
                 <Text className="text-xs leading-relaxed text-mine-muted">
                   PolyTune{" "}
-                  <Text className="font-bold text-white">
+                  <Text className="font-outfit-bold text-white">
                     does not and cannot
                   </Text>{" "}
                   read your messages, emails, chats, or photos. We have{" "}
-                  <Text className="font-bold text-white">
+                  <Text className="font-outfit-bold text-white">
                     absolutely zero access
                   </Text>{" "}
                   to your security tokens or payment details.
@@ -109,14 +109,14 @@ export function PrivacyPermissionModal({
                 />
               </View>
               <View className="flex-1">
-                <Text className="mb-1 text-sm font-bold text-amber-400">
+                <Text className="mb-1 text-sm font-outfit-bold text-amber-400">
                   Android's Standard System Warning
                 </Text>
                 <Text className="text-xs leading-relaxed text-mine-muted">
                   Android shows a generic, scary warning that this app can "read
                   all notifications...including personal data". This is
                   Android's default notice for{" "}
-                  <Text className="font-bold text-white">any</Text> notification
+                  <Text className="font-outfit-bold text-white">any</Text> notification
                   listener. (e.g. smartwatches, car systems.) We ignore
                   everything except media controls.
                 </Text>
@@ -130,7 +130,7 @@ export function PrivacyPermissionModal({
               className="w-full items-center justify-center rounded-pill py-3.5"
               style={{ backgroundColor: accentColor }}
             >
-              <Text className="text-base font-bold text-mine-bg">
+              <Text className="text-base font-outfit-bold text-mine-bg">
                 Continue to Settings
               </Text>
             </TouchableOpacity>
@@ -139,7 +139,7 @@ export function PrivacyPermissionModal({
               onPress={onClose}
               className="items-center justify-center w-full py-3 border rounded-pill border-mine-primary"
             >
-              <Text className="text-sm font-bold text-mine-primary">
+              <Text className="text-sm font-outfit-bold text-mine-primary">
                 Not Now
               </Text>
             </TouchableOpacity>
