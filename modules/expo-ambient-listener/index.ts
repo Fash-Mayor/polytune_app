@@ -30,6 +30,14 @@ export function togglePlayback(): Promise<void> {
   return ExpoAmbientListenerModule.togglePlayback();
 }
 
+export function skipToNext(): Promise<void> {
+  return ExpoAmbientListenerModule.skipToNext();
+}
+
+export function skipToPrevious(): Promise<void> {
+  return ExpoAmbientListenerModule.skipToPrevious();
+}
+
 export function getCurrentPlaybackPosition(): Promise<number> {
   return ExpoAmbientListenerModule.getCurrentPlaybackPosition();
 }

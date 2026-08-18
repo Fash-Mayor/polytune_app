@@ -7,5 +7,6 @@ export type LyricLine = {
 
 export type LyricsStreamMessage =
   | { item: LyricLine }
+  | { meta: { synced: boolean } }
   | { done: true }
   | { error: string };

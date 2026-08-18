@@ -2,11 +2,16 @@ import { supabase } from "../utils/supabase";
 
 export const ReportingService = {
   
-  async reportSyncIssue(title: string, artist: string): Promise<void> {
+  async reportSyncIssue(
+    title: string,
+    artist: string,
+    note?: string,
+  ): Promise<void> {
     try {
       // 1. Sanitize inputs to prevent trailing space failures
       const cleanTitle = title.trim();
       const cleanArtist = artist.trim();
+      const cleanNote = note?.trim();
 
       // 2. Add high-visibility diagnostics to your Metro terminal
       console.log(`[REPORT QUERY] 🔍 Looking up: "${cleanTitle}" by "${cleanArtist}"`);
@@ -32,7 +37,9 @@ export const ReportingService = {
         .insert([
           {
             song_id: song.id,
-            bug_description: "Sync/translation deviation flagged by user via the NowPlaying overlay panel.",
+            bug_description: cleanNote
+              ? `Sync/translation deviation flagged by user via the NowPlaying overlay panel. User note: ${cleanNote}`
+              : "Sync/translation deviation flagged by user via the NowPlaying overlay panel.",
           },
         ]);
 

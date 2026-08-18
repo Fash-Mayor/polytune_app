@@ -26,7 +26,7 @@ export function FloatingLyricActions({
           size={18}
           color={accentColor}
         />
-        <Text className="ml-2 text-sm font-semibold text-mine-white">
+        <Text className="ml-2 text-sm font-outfit-semibold text-mine-white">
           {isRomanized ? "Original" : "Romanise"}
         </Text>
       </TouchableOpacity>
@@ -40,7 +40,7 @@ export function FloatingLyricActions({
           size={18}
           color="#FFFFFF"
         />
-        <Text className="ml-2 text-sm font-semibold text-mine-white">
+        <Text className="ml-2 text-sm font-outfit-semibold text-mine-white">
           Sync Issue
         </Text>
       </TouchableOpacity>
