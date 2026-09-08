@@ -5,16 +5,24 @@ const SUPABASE_FUNCTION_URL =
   process.env.EXPO_PUBLIC_SUPABASE_FUNCTION_URL ?? "";
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
+export type StreamQuota = { used: number; limit: number; isPro: boolean };
+
 export type LyricsStreamCallbacks = {
   onLine: (line: LyricLine) => void;
-  onMeta: (meta: { synced: boolean }) => void;
+  onMeta: (meta: { synced: boolean; quota?: StreamQuota }) => void;
   onDone: () => void;
-  onError: (message: string) => void;
+  onError: (message: string, code?: string) => void;
 };
 
+// `accessToken` is the signed-in user's Supabase session access token (see
+// hooks/useLyricsStream.ts), not the shared anon key - the edge function
+// uses it to identify the caller and enforce the free-trial quota (Step 5).
+// The `apikey` header stays the anon key regardless; that one's just for
+// Supabase's gateway routing, unrelated to who the user is.
 export function startLyricsStream(
   title: string,
   artist: string,
+  accessToken: string,
   callbacks: LyricsStreamCallbacks,
 ): EventSource {
   const es = new EventSource(SUPABASE_FUNCTION_URL, {
@@ -22,7 +30,7 @@ export function startLyricsStream(
     headers: {
       "Content-Type": "application/json",
       apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify({ trackTitle: title, artistName: artist }),
   });
@@ -41,7 +49,7 @@ export function startLyricsStream(
 
       if (data.error) {
         es.close();
-        callbacks.onError(data.error);
+        callbacks.onError(data.error, data.code);
         return;
       }
 

@@ -103,13 +103,26 @@ object MediaSessionUtils {
   private fun pickBestController(controllers: List<MediaController>): MediaController? {
     if (controllers.isEmpty()) return null
 
-    return controllers.maxByOrNull { controller ->
-      val state = controller.playbackState?.state ?: PlaybackState.STATE_NONE
-      when (state) {
-        PlaybackState.STATE_PLAYING -> 3
-        PlaybackState.STATE_PAUSED -> 2
-        else -> 1
-      }
+    // maxByOrNull only compares one key, so two controllers tied on
+    // playback-state priority (e.g. two paused apps) fell back to
+    // whichever happened to come first in getActiveSessions()'s list.
+    // That list order isn't a reliable "most recently used" signal once
+    // nothing is actively playing, so a tie could surface a stale paused
+    // app over one you paused a second ago. Break ties on each
+    // controller's own playbackState.lastPositionUpdateTime instead - the
+    // actual timestamp of when that session's state last changed - so
+    // ties resolve to whichever app you touched most recently.
+    return controllers.maxWithOrNull(
+      compareBy<MediaController> { controller -> controllerPriority(controller) }
+        .thenBy { controller -> controller.playbackState?.lastPositionUpdateTime ?: 0L }
+    )
+  }
+
+  private fun controllerPriority(controller: MediaController): Int {
+    return when (controller.playbackState?.state ?: PlaybackState.STATE_NONE) {
+      PlaybackState.STATE_PLAYING -> 3
+      PlaybackState.STATE_PAUSED -> 2
+      else -> 1
     }
   }
 }
