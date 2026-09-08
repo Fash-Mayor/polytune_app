@@ -99,3 +99,4 @@ how to preview befor pushing OTA: Expo go don't work (yet)
 
 Add lang to lang!
 so we've installed the things we ned for the future updates into the app so they can just be coming as OTA. Let's proceed to step...
+unsynced lyrics tag should be sticky

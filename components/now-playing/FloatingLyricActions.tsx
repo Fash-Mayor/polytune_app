@@ -6,12 +6,17 @@ type FloatingLyricActionsProps = {
   isRomanized: boolean;
   onToggleRomanize: () => void;
   onReportSyncIssue: () => void;
+  /** Step 5 premium hook (Reads/me.md): save the current track for offline playback. */
+  isOfflineSaved: boolean;
+  onToggleOffline: () => void;
 };
 
 export function FloatingLyricActions({
   isRomanized,
   onToggleRomanize,
   onReportSyncIssue,
+  isOfflineSaved,
+  onToggleOffline,
 }: FloatingLyricActionsProps) {
   const { accentColor } = useTheme();
 
@@ -43,6 +48,17 @@ export function FloatingLyricActions({
         <Text className="ml-2 text-sm font-outfit-semibold text-mine-white">
           Sync Issue
         </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={onToggleOffline}
+        className="items-center justify-center border rounded-full border-mine-border bg-mine-card w-11 h-11"
+      >
+        <MaterialCommunityIcons
+          name={isOfflineSaved ? "check-circle" : "download-outline"}
+          size={20}
+          color={isOfflineSaved ? accentColor : "#FFFFFF"}
+        />
       </TouchableOpacity>
     </View>
   );

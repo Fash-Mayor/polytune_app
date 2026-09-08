@@ -13,20 +13,22 @@ tracked.
 
 ## Step 0 — Stop the bleeding (do these first, before anything else)
 
-- [ ] **Require a Supabase key on the `fetch-lyrics` request.**
-      `verify_jwt = false` and the client sends no `apikey`/`Authorization`
-      header at all — the raw endpoint is callable by anyone who finds the
-      URL, with nothing to check. Fix: send `apikey` + `Authorization: Bearer
-      <anon key>` from `lyricsStream.ts` (the key already lives in
-      `utils/supabase.ts`) and flip `verify_jwt = true` in
-      `supabase/config.toml`. This is a no-regret change — it doesn't limit
-      your own testing at all, since your app already carries that key. It
-      only blocks *blind URL scraping*; the anon key still ships inside the
-      APK, so it isn't a real secret against someone who has decompiled the
-      app — actual per-user protection is the quota check below, which
-      depends on accounts existing (Step 4) and belongs to Step 5, not here.
-      **(todo — "Zero Protection" in the Edge Func Todo's block; review
-      confirmed no auth header is sent client-side)**
+- [x] **Require a Supabase key on the `fetch-lyrics` request.** Confirmed
+      2026-09-06: `services/lyricsStream.ts` sends `apikey` +
+      `Authorization: Bearer <anon key>`, and `supabase/config.toml` already
+      has `verify_jwt = true` for `fetch-lyrics`. Both landed in the
+      `Major updates with calaude` commit. **Still needs a manual step you
+      have to run yourself** — `verify_jwt` in `config.toml` only takes
+      effect once the function is redeployed:
+      `npx supabase login && npx supabase link --project-ref <ref> && npx
+      supabase functions deploy fetch-lyrics`. Until that's run, the live
+      gateway may still be serving the old (unprotected) deployment. This
+      only blocks *blind URL scraping* — the anon key still ships inside the
+      APK, so real per-user protection is still the quota check in Step 5,
+      which depends on Step 4 (auth). **(todo — "Zero Protection" in the
+      Edge Func Todo's block; review confirmed no auth header is sent
+      client-side; verified fixed in code 2026-09-06, deploy step still
+      pending)**
 - [x] ~~Fix the plain-lyrics sync trap.~~ **Looks already fixed as a side
       effect of the NetEase fallback** — the current ingestion waterfall
       only ever pulls `syncedLyrics` (LRCLIB) or `lrc.lyric` (NetEase, both
@@ -52,11 +54,28 @@ tracked.
       duplicate-cache-miss cases that whitespace/case alone doesn't explain.
       **(todo — Edge Func Todo's; review confirmed the inconsistency with
       `reportingService.ts`; implemented in this session)**
-- [ ] Re-check the sync engine and translation/romanization line-alignment
-      once more after the above changes land — you've fixed this class of
-      bug before (mixed original/translated/romanized lines, skipped chorus
-      repeats), so re-verify it's still clean, not that it's newly broken.
-      **(todo)**
+- [x] Re-checked the sync engine and translation/romanization line-alignment
+      2026-09-06. Confirmed clean:
+  - `parseSyncedLines` keeps every `[mm:ss]` line independently, including
+    repeated chorus timestamps — no dedup by content, only the client's
+    `appendLine` dedups, and only on an exact `(timeMs, o)` match, so a
+    real repeat (different `timeMs`) is never dropped.
+  - Gemini translation, Gemini romanization, and local-engine romanization
+    all reject a misaligned result (strict array-length check) instead of
+    trusting a shifted mapping.
+  - `LyricsList`/`LyricLine` render `r` (romanized) and `tr` (translation)
+    as two separate `<Text>` elements, never concatenated — the old "one
+    line that's both romanized and translated" bug has no code path left.
+  - **One real gap found and fixed**: the MyMemory fallback (only reached
+    when Gemini's translation call fails) split its batched response on
+    `" | "` and mapped pieces back to lines by position with **no length
+    check** — the one alignment-sensitive path that hadn't gotten the
+    strict-count guard the rest of the file already uses. Added the same
+    guard: a batch that doesn't split back into exactly as many pieces as
+    lines going in is now discarded (falls back to each line's original
+    text) instead of risking a shifted mapping. **(todo; review 2026-09-06
+    found and fixed the MyMemory-fallback gap; everything else confirmed
+    already clean)**
 
 ## Step 2 — UI/UX fixes already in flight
 
@@ -232,44 +251,133 @@ bug on our end. When LRCLIB also misses, the track gets no lyrics at all.
 
 ## Step 4 — Auth & persistence
 
-- [ ] Authentication, with login persisting across app restarts. Supabase
-      client is already configured with `persistSession: true` via
-      AsyncStorage (`utils/supabase.ts`), but no sign-in flow exists yet —
-      this is also the prerequisite for Step 0's per-user quota enforcement
-      and for Step 5's paywall. **Native deps pre-linked 2026-08-18** so the
-      actual implementation can ship OTA: `@react-native-google-signin/google-signin`
-      (the native account-picker/One Tap SDK) for Google, plain Supabase
-      Auth (already installed) for email/password or magic link.
-      Deliberately **not** in `app.json`'s `plugins` array — its default
-      mode requires a real `google-services.json` (doesn't exist, would
-      break prebuild) and its only other mode is iOS-only (irrelevant,
-      Android-only app); Android needs neither; sign-in configures purely
-      at runtime via `GoogleSignin.configure({ webClientId })` once you have
-      an OAuth Web Client ID from Google Cloud Console — that's a config
-      value, not a package, so it's OTA-safe whenever it lands. Also kept
-      `expo-web-browser`/`expo-auth-session`/`expo-crypto` (linked
-      2026-08-17) even though Google now uses the native SDK instead of the
-      browser-redirect flow they were originally for — `expo-web-browser`
-      still covers Step 7's Privacy Policy/T&C in-app links, and the other
-      two stay cheap insurance against ever adding another OAuth provider.
-      Apple Sign-In deliberately skipped — no iOS build planned right now.
-      **(todo)**
+- [x] **Authentication — Google Sign-In only** (email/magic-link
+      deliberately skipped per product decision — less friction for users).
+      Implemented 2026-09-06:
+  - `providers/AuthProvider.tsx` — new provider wrapping the app (inside
+    `PostHogProvider`, outside `ThemeProvider`/`PreferencesProvider` in
+    `app/_layout.tsx`). Calls `GoogleSignin.configure({ webClientId })`
+    once on mount, tracks the Supabase `session` via
+    `supabase.auth.getSession()` + `onAuthStateChange` (so a persisted
+    session — already `persistSession: true` via AsyncStorage in
+    `utils/supabase.ts` — is picked up automatically on app restart, no
+    extra plumbing needed), and exposes `signInWithGoogle()` / `signOut()`.
+  - Sign-in flow: `GoogleSignin.hasPlayServices()` →
+    `GoogleSignin.signIn()` → its `idToken` → Supabase's
+    `signInWithIdToken({ provider: "google", token })`. User-cancelled
+    (`statusCodes.SIGN_IN_CANCELLED`) is treated as a no-op, not an error.
+  - `hooks/useAuth.ts` — same context-hook pattern as `useTheme`/
+    `usePreferences`.
+  - UI: added an "Account" section to the top of `SettingsScreen` — the
+    official `GoogleSigninButton` when signed out, avatar/name/email +
+    "Sign Out" when signed in.
+  - **2026-09-06: the whole app is now gated behind sign-in**, per explicit
+    instruction (superseding the "don't gate yet" note this item originally
+    shipped with). `app/_layout.tsx`'s `Gate` component swaps the entire
+    `<Stack>` (both `app/index.tsx`'s permission flow and all of
+    `app/(tabs)`) for `components/SignInScreen.tsx` whenever there's no
+    session — driven by the same `user` state Settings' Sign Out button
+    flips, so signing out from deep inside Settings drops straight back to
+    the sign-in screen too, not just on next app launch.
+  - **PostHog now identifies real users**, not just anonymous per-device
+    IDs: on sign-in, `posthog.identify(user.id, { email, name, avatar_url
+    })` merges the device's prior anonymous event history into that
+    person's profile; on sign-out, `posthog.reset()` so the next person on
+    this device doesn't inherit it. A ref guards against re-identifying on
+    every token refresh (only a real sign-in/out/account-switch touches it).
+  - **Manual setup still needed before this actually works** (config
+    values, not code — OTA-safe once added; verified against current
+    Google/Supabase docs 2026-09-06, see chat for the full walkthrough):
+    1. Create **two** OAuth client IDs in the same Google Cloud project —
+       an **Android** one (package name `com.fashmayor.lyricsmine` + each
+       SHA-1 you sign builds with: debug *and* the EAS release keystore)
+       and a **Web application** one (no package/SHA-1 fields).
+    2. Only the **Web** client ID goes in code: `.env`'s
+       `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` (placeholder line already added).
+    3. Supabase Dashboard → Authentication → Providers → Google → its
+       **"Client IDs"** field takes *both* client IDs, comma-separated, Web
+       first. Client Secret is not needed for this native ID-token flow.
+  - **Needs a native rebuild** (`expo prebuild` + `eas build`, not just
+    `eas update`) — `@react-native-google-signin/google-signin`'s native
+    Android module was pre-linked 2026-08-18 but has never actually been
+    exercised in a build yet. Deliberately still **not** in `app.json`'s
+    `plugins` array (unchanged reasoning: its default plugin mode wants a
+    real `google-services.json`, which doesn't exist here; runtime
+    `webClientId` config doesn't need the plugin at all).
+  - Kept `expo-web-browser`/`expo-auth-session`/`expo-crypto` as before —
+    `expo-web-browser` still covers Step 7's Privacy Policy/T&C in-app
+    links; the other two stay cheap insurance against ever adding another
+    OAuth provider. Apple Sign-In still skipped — no iOS build planned.
+    **(todo — implemented in this session)**
 
 ## Step 5 — Monetization
 
-- [ ] Free trial logic: 3 free translations/day for un-cached tracks;
-      cached tracks stream free forever. Depends on Step 4 (auth) and
-      Step 0 (edge function actually checking who's asking). **(todo —
-      PIVOT II)**
-- [ ] Paywall via RevenueCat. **Native deps pre-linked 2026-08-18:**
-      `react-native-purchases` + `react-native-purchases-ui` (exact peer
-      versions, no `app.json` plugin needed for either). Still needed before
-      this ships: a RevenueCat API key from their dashboard — a config
-      value, not a package, so OTA-safe whenever it's added. **(todo)**
-- [ ] Offline mode / caching lyrics locally as a premium hook (`me.md`
-      sketches this: `AsyncStorage` key per `@offline_lyrics_{id}`) — worth
-      scoping once the paywall exists, since it's the natural premium
-      feature to sell alongside it. **(todo, from Reads/me.md)**
+- [x] **Free trial logic + real per-user auth on `fetch-lyrics`.**
+      Implemented 2026-09-07:
+  - `fetch-lyrics/index.ts` now resolves the caller via
+    `supabase.auth.getUser(token)` before doing anything else, and rejects
+    (`401`) any request with no/invalid session — this is what actually
+    closes Step 0's "anon key still ships inside the APK" gap.
+    `services/lyricsStream.ts` sends the signed-in user's session access
+    token as `Authorization`, not the shared anon key anymore.
+  - On a cache **miss** (cache hits stay free forever, untouched): checks
+    the new `subscribers` table for an active Pro entitlement; if not Pro,
+    calls the new `consume_translation_quota` Postgres function (row-locked
+    upsert into `translation_usage`, 3/day) *before* running the ingestion
+    waterfall. Quota exceeded → one SSE event
+    (`code: "quota_exceeded"`) and the stream closes without hitting any
+    lyrics provider or Gemini. Quota state comes back in every miss-path
+    `meta` event too, for client display.
+  - New tables/RPC: `Reads/migrations/2026-09-07-monetization.sql` (not
+    auto-applied — same as the 2026-08-17 migration, run it yourself via the
+    SQL editor or `supabase db push`).
+- [x] **Paywall via RevenueCat.** Implemented 2026-09-07:
+  - `providers/PurchasesProvider.tsx` + `hooks/usePurchases.ts` (same shape
+    as `AuthProvider`/`ThemeProvider`) — configures `react-native-purchases`
+    with `appUserID` set to the Supabase user id once signed in, tracks
+    `isPro` from `customerInfo.entitlements.active["pro"]`, exposes
+    `presentPaywall()` (`RevenueCatUI.presentPaywallIfNeeded`) and
+    `restorePurchases()`.
+  - New edge function `supabase/functions/revenuecat-webhook/index.ts` —
+    the source of truth `fetch-lyrics` checks server-side. Auth is a shared
+    secret (`REVENUECAT_WEBHOOK_SECRET`), not `verify_jwt` (RevenueCat's
+    servers have no Supabase session). `verify_jwt = false` for it in
+    `supabase/config.toml`, documented inline why.
+  - UI: Settings gets a real "Subscription" section (Free/Pro status,
+    Upgrade, Restore Purchases). The lyrics screen's empty state now
+    branches on `quotaExceeded` into an "Upgrade to Pro" prompt instead of
+    the generic "no lyrics found" message.
+  - **Manual setup still needed** (config, not code — OTA-safe once added):
+    1. RevenueCat dashboard: create an entitlement identifier **`pro`** and
+       an offering named **`default`** with your Android product(s) — the
+       code assumes exactly these identifiers.
+    2. Add the Android API key to `.env`'s
+       `EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY` (placeholder line already
+       added).
+    3. Set `REVENUECAT_WEBHOOK_SECRET` as a Supabase Edge Function secret
+       (`supabase secrets set REVENUECAT_WEBHOOK_SECRET=<value>`), then in
+       RevenueCat's dashboard (Project Settings → Webhooks) point the
+       webhook URL at the deployed `revenuecat-webhook` function and set its
+       Authorization header to that same value.
+    4. Deploy both functions:
+       `supabase functions deploy fetch-lyrics` and
+       `supabase functions deploy revenuecat-webhook`.
+  - **Needs a native rebuild** — same pending blocker as Step 4's Google
+    Sign-In: `react-native-purchases`/`react-native-purchases-ui` were
+    pre-linked 2026-08-18 but never actually exercised in a build yet; no
+    `app.json` plugin needed for either.
+- [x] **Offline mode / caching lyrics locally as a premium hook**, per
+      `Reads/me.md`. Implemented 2026-09-07:
+  - `services/offlineLyrics.ts` — `AsyncStorage` key per
+    `@offline_lyrics_{title}::{artist}`, exactly as `me.md` sketches (no
+    filesystem access, just the JSON payload).
+  - `useLyricsStream` checks local storage *before* opening the network
+    stream — a downloaded track loads with zero network requests and no
+    session token, real offline/airplane-mode use. A manual "resync" always
+    bypasses the offline copy and re-fetches from the network.
+  - `FloatingLyricActions` gets a third pill (download icon) next to
+    Romanise/Sync Issue. Free users tapping it see the paywall (the upsell
+    moment) instead of a disabled control; Pro users toggle save/remove.
 
 ## Step 6 — Analytics & delivery
 
@@ -286,18 +394,56 @@ bug on our end. When LRCLIB also misses, the track gets no lyrics at all.
 ## Step 7 — Before public launch (B4Launch)
 
 - [ ] Real users tested, feedback collected — do this *before* the
-      authentication step per your own note. **(todo)**
-- [ ] Play Store assets. **(todo)**
-- [ ] Privacy Policy and Terms & Conditions, surfaced from a
-      Settings/Profile page. **(todo)**
-- [ ] Settings/Profile page hosting the above legal links. **(todo)**
+      authentication step per your own note. **(todo — blocked on the
+      native rebuild, same as RevenueCat/Google Sign-In)**
+- [x] **Privacy Policy and Terms & Conditions + Settings/Profile legal
+      links.** Implemented 2026-09-07:
+  - Both published as hosted pages (not native in-app screens — Play Store
+    submission needs a public Privacy Policy URL regardless), written
+    specific to how PolyTune actually works (the real third-party services,
+    the real free-trial/Pro terms, the Notification-Access data flow) rather
+    than generic boilerplate:
+    - Privacy Policy: https://claude.ai/code/artifact/fc84a702-5298-4c93-81af-86938814b448
+    - Terms & Conditions: https://claude.ai/code/artifact/9c1f933a-336b-47e3-8868-47c26a70fd39
+  - `constants/legal.ts` holds both URLs — the only place to update if they
+    ever move to a real domain.
+  - Settings gets a real "Legal" section (`app/(tabs)/settings/index.tsx`)
+    opening both via `expo-web-browser`'s `openBrowserAsync` — the exact
+    thing that dependency was kept installed for back in Step 4. Settings
+    already *is* the app's Profile page (Account/Subscription/Karaoke/
+    Appearance/Legal all live there) — no separate route was needed. A
+    footer line now also shows the app version (`expo-constants`).
+  - **Still needs a human step before real launch:** both pages default to
+    private (Claude Artifacts) — open each → share menu → make public,
+    otherwise Google's review can't reach them. Also fill in the one
+    placeholder left in the Terms page (§12 Governing Law — needs your
+    actual jurisdiction, not something I can pick for you).
+- [x] **Play Store listing text + Data Safety mapping.** Implemented
+      2026-09-07 — `Reads/PlayStoreListing.md`: app title, short/full
+      description (ASO keywords from `Marketing.md` folded in), and a
+      best-effort Data Safety form mapping (flagged where a provider's own
+      SDK disclosure needs checking, not guessed). **Icon/feature
+      graphic/screenshots are spec'd in that doc but not produced** — same
+      native-rebuild blocker as everything else in this section; can't
+      screenshot a build that can't get past Google Sign-In yet.
 
 ## Lower priority / edge cases (review only, not launch-blocking)
 
-- [ ] `pickBestController` (Kotlin, `MediaSessionUtils.kt`) breaks ties
-      between two equal-priority media sessions (e.g. two paused apps) by
-      list order, which can occasionally surface the wrong app's track.
-      Same for the global-media-key fallback in `togglePlayback`.
+- [x] **`pickBestController` tie-break bug.** Fixed 2026-09-07:
+      `MediaSessionUtils.kt`'s `pickBestController` used `maxByOrNull` on
+      playback-state priority alone, so two equal-priority sessions (e.g.
+      two paused apps) tied and fell back to whichever happened to come
+      first in `getActiveSessions()`'s list order — not a reliable
+      "most recently used" signal once nothing is actively playing. Now
+      breaks ties on each controller's own
+      `playbackState.lastPositionUpdateTime` (the real timestamp of when
+      that session's state last changed) via `maxWithOrNull` +
+      `compareBy().thenBy()`, so a tie resolves to whichever app you
+      actually touched most recently. `togglePlayback`'s global-media-key
+      fallback shares the same root cause (it reads
+      `MediaSessionStateHolder.activeController`, which is set from this
+      same `pickBestController` call) — one fix covers both. Needs the
+      native rebuild to test, same as everything else in this pass.
 - [x] ~~`app.json` still declares an `ios` block~~ — removed 2026-08-18.
 
 ---
@@ -305,3 +451,6 @@ bug on our end. When LRCLIB also misses, the track gets no lyrics at all.
 **Suggested order to actually execute in:** Step 0 → Step 1 → Step 2's font
 fix (blocks real UI polish) → Step 4 (auth) → Step 5 (monetization) →
 remaining Step 2/3 items → Step 6 → Step 7.
+
+See also `Reads/SaleReadiness.md` for the code+IP sale-packaging checklist
+(legal disclosure, buyer docs, demo assets) that runs alongside this list.

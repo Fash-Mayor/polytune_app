@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, AppState, Text, View } from "react-native";
+import { ActivityIndicator, Alert, AppState, Text, TouchableOpacity, View } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Animated, {
   Easing,
   interpolate,
@@ -34,6 +35,7 @@ import { ReportingService } from "../../services/reportingService";
 import { useTheme } from "../../hooks/useTheme";
 import { usePreferences } from "../../hooks/usePreferences";
 import { useDominantColor } from "../../hooks/useDominantColor";
+import { usePurchases } from "../../hooks/usePurchases";
 
 const TRANSITION_MS = 480;
 
@@ -99,10 +101,46 @@ export default function NowPlayingScreen() {
     });
   }, [posthog, track?.title]);
 
-  const { lyricsData, fetchingLyrics, isSynced, refetch } = useLyricsStream(
+  const {
+    lyricsData,
+    fetchingLyrics,
+    isSynced,
+    quotaExceeded,
+    isOfflineSaved,
+    toggleOffline,
+    refetch,
+  } = useLyricsStream(
     listeningEnabled ? track?.title : undefined,
     listeningEnabled ? track?.artist : undefined,
   );
+  const { isPro, presentPaywall } = usePurchases();
+  const [isPaywallBusy, setIsPaywallBusy] = useState(false);
+
+  const handleUpgradeFromPaywallHit = async () => {
+    setIsPaywallBusy(true);
+    try {
+      const becamePro = await presentPaywall();
+      if (becamePro) refetch();
+    } catch (e: any) {
+      Alert.alert("Upgrade failed", e?.message ?? "Something went wrong. Please try again.");
+    } finally {
+      setIsPaywallBusy(false);
+    }
+  };
+
+  const handleToggleOffline = async () => {
+    // Offline saving is the premium hook (Reads/me.md) - a free user tapping
+    // it is the upsell moment, not a hidden/disabled control.
+    if (!isPro) {
+      try {
+        await presentPaywall();
+      } catch (e: any) {
+        Alert.alert("Upgrade failed", e?.message ?? "Something went wrong. Please try again.");
+      }
+      return;
+    }
+    await toggleOffline();
+  };
 
   const { playbackPositionMs, resync } = usePlaybackPosition(
     isPlaying,
@@ -302,6 +340,28 @@ export default function NowPlayingScreen() {
               isSynced={isSynced}
               karaokeMode={karaokeMode}
             />
+          ) : quotaExceeded ? (
+            <View className="items-center justify-center flex-1 px-8">
+              <MaterialCommunityIcons name="star-outline" size={40} color={accentColor} />
+              <Text className="mt-4 text-lg text-center font-outfit-bold text-mine-white">
+                Daily free limit reached
+              </Text>
+              <Text className="mt-2 text-sm text-center font-sans text-mine-muted">
+                You've used today's 3 free translations for new tracks.
+                Upgrade to Pro for unlimited translations — cached tracks
+                still stream free.
+              </Text>
+              <TouchableOpacity
+                onPress={handleUpgradeFromPaywallHit}
+                disabled={isPaywallBusy}
+                className="px-6 py-3 mt-6 rounded-pill"
+                style={{ backgroundColor: accentColor, opacity: isPaywallBusy ? 0.6 : 1 }}
+              >
+                <Text className="text-sm font-outfit-semibold text-mine-bg">
+                  {isPaywallBusy ? "Loading..." : "Upgrade to Pro"}
+                </Text>
+              </TouchableOpacity>
+            </View>
           ) : (
             <View className="items-center justify-center flex-1 px-8">
               <Text className="text-base text-center font-sans text-mine-muted">
@@ -316,6 +376,8 @@ export default function NowPlayingScreen() {
             isRomanized={isRomanized}
             onToggleRomanize={() => setIsRomanized((prev) => !prev)}
             onReportSyncIssue={handleSyncIssue}
+            isOfflineSaved={isOfflineSaved}
+            onToggleOffline={handleToggleOffline}
           />
         </Animated.View>
       )}
