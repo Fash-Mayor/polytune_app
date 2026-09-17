@@ -54,7 +54,7 @@ export function LyricLine({
 
   return (
     <Animated.View
-      className="-mx-4 px-4 py-1 mb-8 rounded-2xl"
+      className="px-4 py-1 mb-8 -mx-4 rounded-2xl"
       style={glowStyle}
       onLayout={onLayout}
     >
