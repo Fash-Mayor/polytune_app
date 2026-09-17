@@ -89,14 +89,14 @@ export default function WelcomeScreen() {
         />
 
         <Text
-          className="font-outfit-bold text-center text-mine-white"
+          className="text-center font-outfit-bold text-mine-white"
           style={{ fontSize: isCompact ? 36 : 42, letterSpacing: 0.5 }}
         >
           PolyTune
         </Text>
 
         <Text
-          className="max-w-xs mt-3 italic text-center text-mine-white/90"
+          className="max-w-xs mt-3 text-center font-outfit-medium text-mine-white/90"
           style={{
             fontSize: isCompact ? 16 : 18,
             lineHeight: isCompact ? 24 : 28,
