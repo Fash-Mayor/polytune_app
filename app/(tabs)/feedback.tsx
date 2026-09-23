@@ -137,7 +137,7 @@ export default function FeedbackScreen() {
           </Text>
           <Text className="mt-2 text-sm leading-5 font-outfit-medium text-mine-muted">
             Only English translations are supported for now. Ensure your lyrics
-            contain time stamps, e.g. [00:12.00]
+            contain time stamps, e.g. "anata wa kawaii","you are cute",[00:12.00]
           </Text>
 
           <Text className="mt-5 mb-2 text-sm font-outfit-semibold text-mine-white">
@@ -182,7 +182,7 @@ export default function FeedbackScreen() {
         className="items-center py-4 mt-6 rounded-pill shadow-glow"
         style={{ backgroundColor: accentColor }}
       >
-        <Text className="text-lg font-outfit-bold text-mine-bg">Submit Feedback</Text>
+        <Text className="text-lg font-outfit-bold text-mine-bg">Submit</Text>
       </TouchableOpacity>
     </ScrollView>
   );
