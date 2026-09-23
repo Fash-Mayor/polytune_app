@@ -43,19 +43,19 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#000000",
-        "foregroundImage": "./assets/PolyTuneLogo2.png",
-        "monochromeImage": "./assets/PolyTuneLogo2.png"
+        "foregroundImage": "./assets/PolyTuneLogo.png",
+        "monochromeImage": "./assets/PolyTuneLogo.png"
       },
       "splash": {
         "backgroundColor": "#000000",
-        "image": "./assets/PolyTuneLogo2.png",
+        "image": "./assets/PolyTuneLogo.png",
         "resizeMode": "contain",
         "dark": {
           "backgroundColor": "#000000",
-          "image": "./assets/PolyTuneLogo2.png"
+          "image": "./assets/PolyTuneLogo.png"
         }
       },
-      "notificationIcon": "./assets/PolyTuneLogo2.png",
+      "notificationIcon": "./assets/PolyTuneLogo.png",
       "package": "com.fashmayor.lyricsmine",
       "predictiveBackGestureEnabled": false
     }
