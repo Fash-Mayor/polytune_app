@@ -21,7 +21,7 @@ Instead of waiting for official translations, PolyTune intercepts your media ses
 PolyTune is currently in open beta. Since it is not on the Play Store yet, you can download the raw APK directly.
 
 ### Installation Instructions:
-1. Go to the [Releases page](link-to-your-github-releases-page) and download the latest `PolyTune-v1.3.1-beta.apk` file.
+1. Go to the [Releases page](https://github.com/Fash-Mayor/PolyTune/releases) and download the `latest` file.
 2. Open the downloaded file on your Android device.
 3. Your phone may show a warning: **"For your security, your phone is not allowed to install unknown apps from this source."**
 4. Tap **Settings** on that prompt, and toggle on **"Allow from this source"**.
