@@ -38,4 +38,4 @@ You can report bugs in the app. Use **Sync Issue** to report a sync or translati
 * React Native & Expo
 * Supabase (PostgreSQL & Edge Functions)
 * NativeWind (Tailwind CSS)
-* Custom Kotlin Ambient Listeners
+* Kotlin
