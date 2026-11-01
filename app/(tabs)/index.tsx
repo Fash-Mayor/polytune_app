@@ -106,6 +106,7 @@ export default function NowPlayingScreen() {
     fetchingLyrics,
     isSynced,
     quotaExceeded,
+    lyricsError,
     isOfflineSaved,
     toggleOffline,
     refetch,
@@ -361,6 +362,12 @@ export default function NowPlayingScreen() {
                   {isPaywallBusy ? "Loading..." : "Upgrade to Pro"}
                 </Text>
               </TouchableOpacity>
+            </View>
+          ) : lyricsError ? (
+            <View className="items-center justify-center flex-1 px-8">
+              <Text className="text-base text-center font-sans text-mine-muted">
+                {lyricsError}
+              </Text>
             </View>
           ) : (
             <View className="items-center justify-center flex-1 px-8">

@@ -32,6 +32,7 @@ export function useLyricsStream(
   const [quota, setQuota] = useState<StreamQuota | null>(null);
   const [quotaExceeded, setQuotaExceeded] = useState(false);
   const [isOfflineSaved, setIsOfflineSaved] = useState(false);
+  const [lyricsError, setLyricsError] = useState<string | null>(null);
   const [refetchToken, setRefetchToken] = useState(0);
   const activeEventSource = useRef<EventSource | null>(null);
   const posthog = usePostHog();
@@ -55,12 +56,20 @@ export function useLyricsStream(
   }, []);
 
   useEffect(() => {
-    if (!title || !artist || !trackKey) return;
-
     closeStream();
+    if (!title || !artist || !trackKey) {
+      setLyricsData(null);
+      setFetchingLyrics(false);
+      setQuotaExceeded(false);
+      setLyricsError(null);
+      setIsOfflineSaved(false);
+      return;
+    }
+
     setFetchingLyrics(true);
     setLyricsData([]);
     setQuotaExceeded(false);
+    setLyricsError(null);
     setIsOfflineSaved(false);
     // Reset to the safe default until the server tells us otherwise - the
     // server always sends `meta` before the first `item`, so in practice
@@ -97,16 +106,23 @@ export function useLyricsStream(
 
       activeEventSource.current = startLyricsStream(title, artist, accessToken, {
         onLine: (line) => {
+          if (cancelled) return;
           setFetchingLyrics(false);
           setLyricsData((prev) => appendLine(prev, line));
         },
         onMeta: (meta) => {
+          if (cancelled) return;
           setIsSynced(meta.synced);
           if (meta.quota) setQuota(meta.quota);
         },
-        onDone: () => setFetchingLyrics(false),
-        onError: (message, code) => {
+        onDone: () => {
+          if (cancelled) return;
           setFetchingLyrics(false);
+        },
+        onError: (message, code) => {
+          if (cancelled) return;
+          setFetchingLyrics(false);
+          setLyricsError(message);
           if (code === "quota_exceeded") {
             setQuotaExceeded(true);
             posthog?.capture("Paywall_Hit", { artist, reason: "quota_exceeded" });
@@ -141,6 +157,7 @@ export function useLyricsStream(
     isSynced,
     quota,
     quotaExceeded,
+    lyricsError,
     isOfflineSaved,
     toggleOffline,
     refetch,

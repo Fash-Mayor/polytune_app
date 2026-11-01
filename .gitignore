@@ -33,6 +33,11 @@ yarn-error.*
 supabase/
 .vscode/
 
+# supabase
+supabase/
+
+Reads/
+
 # local env files
 .env*.local
 
