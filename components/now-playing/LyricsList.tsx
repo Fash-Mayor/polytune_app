@@ -4,13 +4,12 @@ import {
   ScrollView,
   Text,
   View,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import type { LyricLine } from "../../types/lyrics";
+import type { LineKind, LyricLine } from "../../types/lyrics";
 import { findActiveLineIndex } from "../../utils/lyricSync";
 import { useTheme } from "../../hooks/useTheme";
+import { usePreferences } from "../../hooks/usePreferences";
 import { LyricLine as LyricLineRow } from "./LyricLine";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -30,6 +29,43 @@ type LyricsListProps = {
   karaokeMode?: boolean;
 };
 
+function resolveLinesForRow(
+  line: LyricLine,
+  lineLayout: LineKind[],
+  isRomanized: boolean,
+): string[] {
+  const hasBothOAndR = lineLayout.includes("o") && lineLayout.includes("r");
+
+  const effectiveLayout =
+    hasBothOAndR && isRomanized
+      ? lineLayout.map((k) => (k === "o" ? "r" : k === "r" ? "o" : k))
+      : lineLayout;
+
+  const result: string[] = [];
+
+  for (const kind of effectiveLayout) {
+    let raw = "";
+    if (kind === "o") {
+      raw = !hasBothOAndR && isRomanized ? line.r || line.o : line.o;
+    } else if (kind === "r") {
+      raw = hasBothOAndR ? line.r : isRomanized ? line.o : line.r || line.o;
+    } else if (kind === "tr") {
+      raw = line.tr;
+    }
+
+    const trimmed = raw?.trim();
+    if (trimmed && !result.includes(trimmed)) {
+      result.push(trimmed);
+    }
+  }
+
+  if (result.length === 0 && line.o?.trim()) {
+    result.push(line.o.trim());
+  }
+
+  return result;
+}
+
 export function LyricsList({
   lyricsData,
   playbackPositionMs,
@@ -38,10 +74,18 @@ export function LyricsList({
   karaokeMode = false,
 }: LyricsListProps) {
   const { accentColor } = useTheme();
+  const { lineLayout } = usePreferences();
   const scrollViewRef = useRef<ScrollView>(null);
   const lyricPositions = useRef<Record<number, number>>({});
   const lastScrolledIndex = useRef(-1);
   const isUserScrolling = useRef(false);
+
+  const layoutKey = lineLayout.join(",");
+
+  useEffect(() => {
+    lyricPositions.current = {};
+    lastScrolledIndex.current = -1;
+  }, [layoutKey]);
 
   const activeIndex = useMemo(
     () => (isSynced ? findActiveLineIndex(lyricsData, playbackPositionMs) : -1),
@@ -64,7 +108,7 @@ export function LyricsList({
       y: Math.max(0, targetY - SCROLL_CENTER_OFFSET),
       animated: true,
     });
-  }, [activeIndex]);
+  }, [activeIndex, isSynced]);
 
   return (
     <ScrollView
@@ -103,14 +147,13 @@ export function LyricsList({
         // now", which isn't a claim we can make without real timestamps.
         const isHighlighted = isSynced && index === activeIndex;
         const isDimmed = isSynced && !isHighlighted;
-        const lineKey = `${line.timeMs}-${line.o}`;
-        const original = isRomanized && line.r ? line.r : line.o;
+        const lineKey = `${line.timeMs}-${line.o}-${layoutKey}`;
+        const lines = resolveLinesForRow(line, lineLayout, isRomanized);
 
         return (
           <LyricLineRow
             key={lineKey}
-            original={original}
-            translation={line.tr || null}
+            lines={lines}
             isHighlighted={isHighlighted}
             isDimmed={isDimmed}
             karaokeMode={karaokeMode}
@@ -125,3 +168,4 @@ export function LyricsList({
     </ScrollView>
   );
 }
+

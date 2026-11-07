@@ -43,7 +43,7 @@ export default function NowPlayingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { accentColor } = useTheme();
-  const { karaokeMode } = usePreferences();
+  const { karaokeMode, lineLayout } = usePreferences();
   const progress = useSharedValue(0);
   const { isCompact, artSize, cardPadding, sectionGap, playButtonSize } =
     useResponsiveLayout();
@@ -56,6 +56,16 @@ export default function NowPlayingScreen() {
   const [lyricsVisible, setLyricsVisible] = useState(false);
   const posthog = usePostHog();
   const lastTrackedTitleRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    setIsRomanized(false);
+  }, [lineLayout]);
+
+  const defaultRomanizedFirst =
+    lineLayout.includes("r") &&
+    (!lineLayout.includes("o") ||
+      lineLayout.indexOf("r") < lineLayout.indexOf("o"));
+  const showingRomanized = defaultRomanizedFirst ? !isRomanized : isRomanized;
 
   useEffect(() => {
     const verify = async () => {
@@ -380,7 +390,7 @@ export default function NowPlayingScreen() {
           )}
 
           <FloatingLyricActions
-            isRomanized={isRomanized}
+            isRomanized={showingRomanized}
             onToggleRomanize={() => setIsRomanized((prev) => !prev)}
             onReportSyncIssue={handleSyncIssue}
             isOfflineSaved={isOfflineSaved}
