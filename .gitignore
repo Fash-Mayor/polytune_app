@@ -18,7 +18,7 @@ expo-env.d.ts
 *.key
 *.mobileprovision
 
-modules/expo-ambient-listener/android
+modules/**/android/.gradle/
 
 # Metro
 .metro-health-check*
