@@ -6,8 +6,7 @@ import Animated, {
 import type { LayoutChangeEvent } from "react-native";
 
 type LyricLineProps = {
-  original: string;
-  translation: string | null;
+  lines: string[];
   isHighlighted: boolean;
   isDimmed: boolean;
   karaokeMode: boolean;
@@ -16,8 +15,7 @@ type LyricLineProps = {
 };
 
 export function LyricLine({
-  original,
-  translation,
+  lines,
   isHighlighted,
   isDimmed,
   karaokeMode,
@@ -54,33 +52,39 @@ export function LyricLine({
 
   return (
     <Animated.View
-      className="-mx-4 px-4 py-1 mb-8 rounded-2xl"
+      className="px-4 py-1 mb-8 -mx-4 rounded-2xl"
       style={glowStyle}
       onLayout={onLayout}
     >
       <Animated.View style={popStyle}>
-        <Text
-          className={`text-[25px] font-outfit-semibold leading-9 pb-1 ${
-            isDimmed ? "text-mine-muted" : "text-mine-white"
-          }`}
-          style={{
-            opacity: isDimmed ? 0.3 : 1.0,
-            ...(isHighlighted ? { color: accentColor } : {}),
-          }}
-        >
-          {original}
-        </Text>
-        {translation ? (
-          <Text
-            className={`mt-1 text-[21px] font-outfit-medium leading-7 pb-1 ${
-              isDimmed ? "text-mine-muted" : "text-mine-white"
-            }`}
-            style={{ opacity: isDimmed ? 0.3 : 1.0 }}
-          >
-            {translation}
-          </Text>
-        ) : null}
+        {lines.map((text, idx) =>
+          idx === 0 ? (
+            <Text
+              key={idx}
+              className={`text-[25px] font-outfit-semibold leading-9 pb-1 ${
+                isDimmed ? "text-mine-muted" : "text-mine-white"
+              }`}
+              style={{
+                opacity: isDimmed ? 0.3 : 1.0,
+                ...(isHighlighted ? { color: accentColor } : {}),
+              }}
+            >
+              {text}
+            </Text>
+          ) : (
+            <Text
+              key={idx}
+              className={`mt-1 text-[21px] font-outfit-medium leading-7 pb-1 ${
+                isDimmed ? "text-mine-muted" : "text-mine-white"
+              }`}
+              style={{ opacity: isDimmed ? 0.3 : 1.0 }}
+            >
+              {text}
+            </Text>
+          ),
+        )}
       </Animated.View>
     </Animated.View>
   );
 }
+

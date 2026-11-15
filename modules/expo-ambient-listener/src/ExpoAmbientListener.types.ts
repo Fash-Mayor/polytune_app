@@ -1,1 +1,1 @@
-export type { MediaEvent } from "../../types/media";
+export type { MediaEvent } from "../../../types/media";

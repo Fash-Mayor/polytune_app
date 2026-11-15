@@ -1,6 +1,8 @@
 import { useState, type ReactNode } from "react";
 import {
+  ActivityIndicator,
   Alert,
+  Image,
   ScrollView,
   Switch,
   Text,
@@ -9,14 +11,25 @@ import {
   View,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { GoogleSigninButton } from "@react-native-google-signin/google-signin";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as WebBrowser from "expo-web-browser";
+import Constants from "expo-constants";
 import { useTheme } from "../../../hooks/useTheme";
 import { usePreferences } from "../../../hooks/usePreferences";
+import {
+  ALL_LINE_KINDS,
+  DEFAULT_LINE_LAYOUT,
+  type LineKind,
+} from "../../../providers/PreferencesProvider";
+import { useAuth } from "../../../hooks/useAuth";
+import { usePurchases } from "../../../hooks/usePurchases";
 import {
   DISCO_THEME_COLORS,
   THEME_PRESETS,
   type ThemeMode,
 } from "../../../constants/themePresets";
+import { PRIVACY_POLICY_URL, TERMS_URL } from "../../../constants/legal";
 
 const colorSwatches = [
   "#22C55E",
@@ -26,6 +39,27 @@ const colorSwatches = [
   "#F59E0B",
   "#14B8A6",
 ];
+
+const LINE_KIND_META: Record<
+  LineKind,
+  { label: string; description: string; sample: string }
+> = {
+  o: {
+    label: "Original",
+    description: "Lyrics in the song's native script",
+    sample: "夜に駆ける",
+  },
+  r: {
+    label: "Romanised",
+    description: "Phonetic pronunciation in Latin letters",
+    sample: "Yoru ni kakeru",
+  },
+  tr: {
+    label: "Translation",
+    description: "Translated meaning of each line",
+    sample: "Racing into the night",
+  },
+};
 
 function SettingsSection({
   icon,
@@ -73,8 +107,93 @@ export default function SettingsScreen() {
     resetTheme,
     isDiscoMode,
   } = useTheme();
-  const { karaokeMode, setKaraokeMode } = usePreferences();
+  const {
+    karaokeMode,
+    setKaraokeMode,
+    lineLayout,
+    setLineLayout,
+    resetLineLayout,
+  } = usePreferences();
+  const { user, isSigningIn, signInWithGoogle, signOut } = useAuth();
+  const { isPro, isLoading: purchasesLoading, presentPaywall, restorePurchases } = usePurchases();
   const [customColor, setCustomColor] = useState(accentColor.replace("#", ""));
+  const [isPaywallBusy, setIsPaywallBusy] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+
+  const orderedDisplayKinds: LineKind[] = [
+    ...lineLayout,
+    ...ALL_LINE_KINDS.filter((k) => !lineLayout.includes(k)),
+  ];
+
+  const handleMoveLine = (kind: LineKind, direction: -1 | 1) => {
+    const index = lineLayout.indexOf(kind);
+    if (index === -1) return;
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= lineLayout.length) return;
+    const next = [...lineLayout];
+    const [removed] = next.splice(index, 1);
+    next.splice(targetIndex, 0, removed);
+    setLineLayout(next);
+  };
+
+  const handleToggleLine = (kind: LineKind, enabled: boolean) => {
+    if (enabled) {
+      if (!lineLayout.includes(kind)) {
+        setLineLayout([...lineLayout, kind]);
+      }
+      return;
+    }
+
+    if (lineLayout.length <= 1) {
+      Alert.alert(
+        "Lyrics Layout",
+        "At least one lyric line must remain visible.",
+      );
+      return;
+    }
+
+    setLineLayout(lineLayout.filter((k) => k !== kind));
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (e: any) {
+      Alert.alert(
+        "Sign-in failed",
+        e?.message ?? "Something went wrong. Please try again.",
+      );
+    }
+  };
+
+  const handleUpgrade = async () => {
+    setIsPaywallBusy(true);
+    try {
+      const becamePro = await presentPaywall();
+      if (becamePro) Alert.alert("You're Pro!", "Unlimited translations are unlocked.");
+    } catch (e: any) {
+      Alert.alert("Upgrade failed", e?.message ?? "Something went wrong. Please try again.");
+    } finally {
+      setIsPaywallBusy(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    setIsRestoring(true);
+    try {
+      const restored = await restorePurchases();
+      Alert.alert(
+        restored ? "Restored" : "Nothing to restore",
+        restored
+          ? "Your Pro subscription is active again."
+          : "No previous purchase was found for this account.",
+      );
+    } catch (e: any) {
+      Alert.alert("Restore failed", e?.message ?? "Something went wrong. Please try again.");
+    } finally {
+      setIsRestoring(false);
+    }
+  };
 
   const handleThemeSelection = async (mode: ThemeMode) => {
     if (mode === "disco") {
@@ -113,6 +232,244 @@ export default function SettingsScreen() {
           Your PolyTune preferences, all in one place.
         </Text>
       </View>
+
+      <SettingsSection
+        icon="account-circle-outline"
+        title="Account"
+        description={
+          user
+            ? "Signed in with Google."
+            : "Sign in to save your preferences and unlock more later."
+        }
+        accentColor={accentColor}
+      >
+        {user ? (
+          <>
+            <View className="flex-row items-center px-4 py-3 border rounded-xl border-mine-border bg-mine-input">
+              {user.user_metadata?.avatar_url ? (
+                <Image
+                  source={{ uri: user.user_metadata.avatar_url }}
+                  className="w-10 h-10 mr-3 rounded-full"
+                />
+              ) : (
+                <View
+                  className="items-center justify-center w-10 h-10 mr-3 rounded-full"
+                  style={{ backgroundColor: `${accentColor}33` }}
+                >
+                  <MaterialCommunityIcons
+                    name="account"
+                    size={20}
+                    color={accentColor}
+                  />
+                </View>
+              )}
+              <View className="flex-1">
+                <Text
+                  className="text-sm font-outfit-semibold text-mine-white"
+                  numberOfLines={1}
+                >
+                  {user.user_metadata?.full_name ??
+                    user.user_metadata?.name ??
+                    "Signed in"}
+                </Text>
+                <Text
+                  className="mt-0.5 text-xs font-sans text-mine-muted"
+                  numberOfLines={1}
+                >
+                  {user.email}
+                </Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              onPress={() => void signOut()}
+              className="px-4 py-3 mt-3 border rounded-pill border-mine-border"
+            >
+              <Text className="text-sm text-center font-outfit-semibold text-mine-white">
+                Sign Out
+              </Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <GoogleSigninButton
+            size={GoogleSigninButton.Size.Wide}
+            color={GoogleSigninButton.Color.Dark}
+            disabled={isSigningIn}
+            onPress={() => void handleGoogleSignIn()}
+            style={{ width: "100%", height: 48 }}
+          />
+        )}
+      </SettingsSection>
+
+      <SettingsSection
+        icon={isPro ? "star" : "star-outline"}
+        title="Subscription"
+        description={
+          isPro
+            ? "You're on Pro — unlimited translations, no daily limit."
+            : "Free plan: 3 new-track translations a day. Cached tracks always stream free."
+        }
+        accentColor={accentColor}
+      >
+        {purchasesLoading ? (
+          <ActivityIndicator color={accentColor} />
+        ) : isPro ? (
+          <View className="flex-row items-center px-4 py-3 border rounded-xl border-mine-border bg-mine-input">
+            <MaterialCommunityIcons name="star" size={20} color={accentColor} />
+            <Text className="ml-2 text-sm font-outfit-semibold text-mine-white">
+              Pro — active
+            </Text>
+          </View>
+        ) : (
+          <>
+            <TouchableOpacity
+              onPress={handleUpgrade}
+              disabled={isPaywallBusy}
+              className="px-4 py-3 rounded-pill"
+              style={{ backgroundColor: accentColor, opacity: isPaywallBusy ? 0.6 : 1 }}
+            >
+              <Text className="text-sm text-center font-outfit-semibold text-mine-bg">
+                {isPaywallBusy ? "Loading..." : "Upgrade to Pro"}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleRestore}
+              disabled={isRestoring}
+              className="px-4 py-3 mt-3 border rounded-pill border-mine-border"
+            >
+              <Text className="text-sm text-center font-outfit-semibold text-mine-white">
+                {isRestoring ? "Restoring..." : "Restore Purchases"}
+              </Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </SettingsSection>
+
+      <SettingsSection
+        icon="format-line-spacing"
+        title="Lyrics Layout"
+        description="Choose which lyric lines to display and reorder them from top to bottom."
+        accentColor={accentColor}
+      >
+        <View className="gap-3">
+          {orderedDisplayKinds.map((kind) => {
+            const meta = LINE_KIND_META[kind];
+            const activeIndex = lineLayout.indexOf(kind);
+            const isEnabled = activeIndex !== -1;
+            const canMoveUp = isEnabled && activeIndex > 0;
+            const canMoveDown =
+              isEnabled && activeIndex < lineLayout.length - 1;
+
+            return (
+              <View
+                key={kind}
+                className="flex-row items-center justify-between px-4 py-3 border rounded-xl border-mine-border bg-mine-input"
+                style={{ opacity: isEnabled ? 1 : 0.6 }}
+              >
+                <View
+                  className="items-center justify-center mr-3 rounded-full w-7 h-7"
+                  style={{
+                    backgroundColor: isEnabled
+                      ? `${accentColor}26`
+                      : "#3F3F46",
+                  }}
+                >
+                  <Text
+                    className="text-xs font-outfit-bold"
+                    style={{
+                      color: isEnabled ? accentColor : "#A1A1AA",
+                    }}
+                  >
+                    {isEnabled ? activeIndex + 1 : "–"}
+                  </Text>
+                </View>
+
+                <View className="flex-1 pr-2">
+                  <Text className="text-sm font-outfit-semibold text-mine-white">
+                    {meta.label}
+                  </Text>
+                  <Text className="mt-0.5 font-sans text-xs text-mine-muted">
+                    {meta.description}
+                  </Text>
+                </View>
+
+                <View className="flex-row items-center gap-1">
+                  <TouchableOpacity
+                    onPress={() => handleMoveLine(kind, -1)}
+                    disabled={!canMoveUp}
+                    accessibilityLabel={`Move ${meta.label} up`}
+                    className="items-center justify-center w-8 h-8 border rounded-lg border-mine-border"
+                    style={{ opacity: canMoveUp ? 1 : 0.3 }}
+                  >
+                    <MaterialCommunityIcons
+                      name="chevron-up"
+                      size={20}
+                      color="#FFFFFF"
+                    />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={() => handleMoveLine(kind, 1)}
+                    disabled={!canMoveDown}
+                    accessibilityLabel={`Move ${meta.label} down`}
+                    className="items-center justify-center w-8 h-8 mr-1 border rounded-lg border-mine-border"
+                    style={{ opacity: canMoveDown ? 1 : 0.3 }}
+                  >
+                    <MaterialCommunityIcons
+                      name="chevron-down"
+                      size={20}
+                      color="#FFFFFF"
+                    />
+                  </TouchableOpacity>
+
+                  <Switch
+                    value={isEnabled}
+                    onValueChange={(val) => handleToggleLine(kind, val)}
+                    trackColor={{ false: "#3F3F46", true: `${accentColor}88` }}
+                    thumbColor={isEnabled ? accentColor : "#A1A1AA"}
+                  />
+                </View>
+              </View>
+            );
+          })}
+        </View>
+
+        <View className="p-4 mt-4 border rounded-xl border-mine-border bg-mine-bg">
+          <Text className="mb-2 text-xs tracking-wider uppercase font-outfit-semibold text-mine-muted">
+            Preview
+          </Text>
+          {lineLayout.map((kind, idx) => {
+            const sampleText = LINE_KIND_META[kind].sample;
+            return idx === 0 ? (
+              <Text
+                key={kind}
+                className="text-[22px] font-outfit-semibold leading-8 pb-0.5"
+                style={{ color: accentColor }}
+              >
+                {sampleText}
+              </Text>
+            ) : (
+              <Text
+                key={kind}
+                className="mt-1 text-[18px] font-outfit-medium leading-6 pb-0.5 text-mine-white"
+              >
+                {sampleText}
+              </Text>
+            );
+          })}
+        </View>
+
+        {lineLayout.join(",") !== DEFAULT_LINE_LAYOUT.join(",") ? (
+          <TouchableOpacity
+            onPress={resetLineLayout}
+            className="px-4 py-3 mt-3 border rounded-pill border-mine-border"
+          >
+            <Text className="text-sm text-center font-outfit-semibold text-mine-white">
+              Reset Layout to Default
+            </Text>
+          </TouchableOpacity>
+        ) : null}
+      </SettingsSection>
 
       <SettingsSection
         icon="microphone-variant"
@@ -255,22 +612,44 @@ export default function SettingsScreen() {
         </TouchableOpacity>
       </SettingsSection>
 
-      <View className="p-5 border border-dashed rounded-card border-mine-border">
-        <View className="flex-row items-center">
-          <MaterialCommunityIcons
-            name="account-circle-outline"
-            size={22}
-            color="#71717A"
-          />
-          <Text className="ml-2 text-sm font-outfit-semibold text-mine-muted">
-            More settings coming soon
+      <SettingsSection
+        icon="file-document-outline"
+        title="Legal"
+        description="Privacy Policy and Terms & Conditions."
+        accentColor={accentColor}
+      >
+        <TouchableOpacity
+          onPress={() => void WebBrowser.openBrowserAsync(PRIVACY_POLICY_URL)}
+          className="flex-row items-center justify-between px-4 py-3 border rounded-xl border-mine-border bg-mine-input"
+        >
+          <Text className="text-sm font-outfit-semibold text-mine-white">
+            Privacy Policy
           </Text>
-        </View>
-        <Text className="mt-2 text-xs leading-5 font-sans text-mine-muted">
-          Account & sign-in, subscription, and privacy policy / terms will
-          show up here once they're built.
-        </Text>
-      </View>
+          <MaterialCommunityIcons
+            name="open-in-new"
+            size={16}
+            color="#A1A1AA"
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => void WebBrowser.openBrowserAsync(TERMS_URL)}
+          className="flex-row items-center justify-between px-4 py-3 mt-3 border rounded-xl border-mine-border bg-mine-input"
+        >
+          <Text className="text-sm font-outfit-semibold text-mine-white">
+            Terms &amp; Conditions
+          </Text>
+          <MaterialCommunityIcons
+            name="open-in-new"
+            size={16}
+            color="#A1A1AA"
+          />
+        </TouchableOpacity>
+      </SettingsSection>
+
+      <Text className="mt-2 mb-2 text-xs text-center font-sans text-mine-dim">
+        PolyTune {Constants.expoConfig?.version ?? ""}
+      </Text>
     </ScrollView>
   );
 }

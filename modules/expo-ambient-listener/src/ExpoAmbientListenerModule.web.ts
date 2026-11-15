@@ -1,5 +1,5 @@
 import { registerWebModule, NativeModule } from "expo";
-import type { MediaEvent } from "../../types/media";
+import type { MediaEvent } from "../../../types/media";
 
 class ExpoAmbientListenerModule extends NativeModule<{
   togglePlayback: () => Promise<void>;

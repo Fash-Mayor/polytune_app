@@ -72,11 +72,8 @@ export default function FeedbackScreen() {
       <View className="flex-row gap-3 mb-6">
         <TouchableOpacity
           onPress={() => setType("bug")}
-          className={`flex-1 items-center rounded-xl border p-4 ${
-            type === "bug"
-              ? "border-mine-primary bg-mine-card"
-              : "border-mine-border bg-mine-card"
-          }`}
+          className="flex-1 items-center rounded-xl border border-mine-border bg-mine-card p-4"
+          style={type === "bug" ? { borderColor: accentColor } : undefined}
         >
           <MaterialCommunityIcons
             name="bug-outline"
@@ -84,7 +81,7 @@ export default function FeedbackScreen() {
             color={type === "bug" ? accentColor : "#71717A"}
           />
           <Text
-            className={`mt-2 text-sm font-outfit-semibold ${
+            className={`mt-2 text-sm ${
               type === "bug" ? "text-mine-white" : "text-mine-muted"
             }`}
           >
@@ -94,11 +91,10 @@ export default function FeedbackScreen() {
 
         <TouchableOpacity
           onPress={() => setType("translation")}
-          className={`flex-1 items-center rounded-xl border p-4 ${
-            type === "translation"
-              ? "border-mine-primary bg-mine-card"
-              : "border-mine-border bg-mine-card"
-          }`}
+          className="flex-1 items-center rounded-xl border border-mine-border bg-mine-card p-4"
+          style={
+            type === "translation" ? { borderColor: accentColor } : undefined
+          }
         >
           <MaterialCommunityIcons
             name="translate"
@@ -106,7 +102,7 @@ export default function FeedbackScreen() {
             color={type === "translation" ? accentColor : "#71717A"}
           />
           <Text
-            className={`mt-2 text-sm font-outfit-semibold ${
+            className={`mt-2 text-sm ${
               type === "translation" ? "text-mine-white" : "text-mine-muted"
             }`}
           >
@@ -137,7 +133,7 @@ export default function FeedbackScreen() {
           </Text>
           <Text className="mt-2 text-sm leading-5 font-outfit-medium text-mine-muted">
             Only English translations are supported for now. Ensure your lyrics
-            contain time stamps, e.g. [00:12.00]
+            contain time stamps, e.g. "anata wa kawaii","you are cute",[00:12.00]
           </Text>
 
           <Text className="mt-5 mb-2 text-sm font-outfit-semibold text-mine-white">
@@ -182,7 +178,7 @@ export default function FeedbackScreen() {
         className="items-center py-4 mt-6 rounded-pill shadow-glow"
         style={{ backgroundColor: accentColor }}
       >
-        <Text className="text-lg font-outfit-bold text-mine-bg">Submit Feedback</Text>
+        <Text className="text-lg font-outfit-bold text-mine-bg">Submit</Text>
       </TouchableOpacity>
     </ScrollView>
   );

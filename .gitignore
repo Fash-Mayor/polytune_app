@@ -18,6 +18,8 @@ expo-env.d.ts
 *.key
 *.mobileprovision
 
+modules/**/android/.gradle/
+
 # Metro
 .metro-health-check*
 
@@ -32,6 +34,11 @@ yarn-error.*
 .env
 supabase/
 .vscode/
+
+# supabase
+supabase/
+
+Reads/
 
 # local env files
 .env*.local

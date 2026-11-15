@@ -1,3 +1,5 @@
+export type LineKind = "o" | "r" | "tr";
+
 export type LyricLine = {
   o: string;
   r: string;
@@ -10,3 +12,4 @@ export type LyricsStreamMessage =
   | { meta: { synced: boolean } }
   | { done: true }
   | { error: string };
+
