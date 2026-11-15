@@ -1,16 +1,10 @@
 import { useEffect, useMemo, useRef } from "react";
-import {
-  Dimensions,
-  ScrollView,
-  Text,
-  View,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
-} from "react-native";
+import { Dimensions, ScrollView, Text, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import type { LyricLine } from "../../types/lyrics";
 import { findActiveLineIndex } from "../../utils/lyricSync";
 import { useTheme } from "../../hooks/useTheme";
+import { usePreferences } from "../../hooks/usePreferences";
 import { LyricLine as LyricLineRow } from "./LyricLine";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -38,6 +32,7 @@ export function LyricsList({
   karaokeMode = false,
 }: LyricsListProps) {
   const { accentColor } = useTheme();
+  const { lyricsLayout, lyricsAlignment } = usePreferences();
   const scrollViewRef = useRef<ScrollView>(null);
   const lyricPositions = useRef<Record<number, number>>({});
   const lastScrolledIndex = useRef(-1);
@@ -64,7 +59,7 @@ export function LyricsList({
       y: Math.max(0, targetY - SCROLL_CENTER_OFFSET),
       animated: true,
     });
-  }, [activeIndex]);
+  }, [activeIndex, isSynced]);
 
   return (
     <ScrollView
@@ -90,7 +85,11 @@ export function LyricsList({
     >
       {!isSynced ? (
         <View className="flex-row items-center self-center px-3 py-1.5 mb-6 border rounded-pill border-mine-border bg-mine-card">
-          <MaterialCommunityIcons name="sync-off" size={14} color={accentColor} />
+          <MaterialCommunityIcons
+            name="sync-off"
+            size={14}
+            color={accentColor}
+          />
           <Text className="ml-1.5 text-xs font-outfit-semibold text-mine-muted">
             Unsynced Lyrics
           </Text>
@@ -104,16 +103,32 @@ export function LyricsList({
         const isHighlighted = isSynced && index === activeIndex;
         const isDimmed = isSynced && !isHighlighted;
         const lineKey = `${line.timeMs}-${line.o}`;
-        const original = isRomanized && line.r ? line.r : line.o;
+
+        const primaryText =
+          lyricsLayout === "triple"
+            ? line.o
+            : isRomanized && line.r
+              ? line.r
+              : line.o;
+
+        const secondaryRomanized =
+          lyricsLayout === "triple" && line.r && line.r !== line.o
+            ? line.r
+            : null;
+
+        const translationText =
+          lyricsLayout === "single" ? null : line.tr || null;
 
         return (
           <LyricLineRow
             key={lineKey}
-            original={original}
-            translation={line.tr || null}
+            original={primaryText}
+            secondaryRomanized={secondaryRomanized}
+            translation={translationText}
             isHighlighted={isHighlighted}
             isDimmed={isDimmed}
             karaokeMode={karaokeMode}
+            alignment={lyricsAlignment}
             accentColor={accentColor}
             onLayout={(event) => {
               // Cache immutable layout targets strictly to bypass recalculations
