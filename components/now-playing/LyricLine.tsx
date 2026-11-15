@@ -4,28 +4,23 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import type { LayoutChangeEvent } from "react-native";
-import type { LyricsAlignment } from "../../providers/PreferencesProvider";
 
 type LyricLineProps = {
   original: string;
-  secondaryRomanized?: string | null;
   translation: string | null;
   isHighlighted: boolean;
   isDimmed: boolean;
   karaokeMode: boolean;
-  alignment?: LyricsAlignment;
   accentColor: string;
   onLayout: (event: LayoutChangeEvent) => void;
 };
 
 export function LyricLine({
   original,
-  secondaryRomanized = null,
   translation,
   isHighlighted,
   isDimmed,
   karaokeMode,
-  alignment = "left",
   accentColor,
   onLayout,
 }: LyricLineProps) {
@@ -57,8 +52,6 @@ export function LyricLine({
     [karaokeMode, isHighlighted, accentColor],
   );
 
-  const alignClass = alignment === "center" ? "text-center" : "text-left";
-
   return (
     <Animated.View
       className="-mx-4 px-4 py-1 mb-8 rounded-2xl"
@@ -67,7 +60,7 @@ export function LyricLine({
     >
       <Animated.View style={popStyle}>
         <Text
-          className={`text-[25px] font-outfit-semibold leading-9 pb-1 ${alignClass} ${
+          className={`text-[25px] font-outfit-semibold leading-9 pb-1 ${
             isDimmed ? "text-mine-muted" : "text-mine-white"
           }`}
           style={{
@@ -77,19 +70,9 @@ export function LyricLine({
         >
           {original}
         </Text>
-        {secondaryRomanized ? (
-          <Text
-            className={`mt-0.5 text-[18px] font-outfit-medium leading-6 pb-0.5 ${alignClass} ${
-              isDimmed ? "text-mine-muted" : "text-mine-muted"
-            }`}
-            style={{ opacity: isDimmed ? 0.25 : 0.85 }}
-          >
-            {secondaryRomanized}
-          </Text>
-        ) : null}
         {translation ? (
           <Text
-            className={`mt-1 text-[21px] font-outfit-medium leading-7 pb-1 ${alignClass} ${
+            className={`mt-1 text-[21px] font-outfit-medium leading-7 pb-1 ${
               isDimmed ? "text-mine-muted" : "text-mine-white"
             }`}
             style={{ opacity: isDimmed ? 0.3 : 1.0 }}
