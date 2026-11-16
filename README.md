@@ -39,18 +39,3 @@ You can report bugs in the app. Use **Sync Issue** to report a sync or translati
 * Supabase (PostgreSQL & Edge Functions)
 * NativeWind (Tailwind CSS)
 * Kotlin
-
-* 
-TODO:
-1. UI {settings, }
-2. Lyrics upload & unsynced tag
-3. Local romanisation engine in edge function
-4. Lang to Lang
-5. AI deep dive (language learning) 
-6. YTM from device (Tifi no mitai) 
-7. 
-
-* 
-FIXES:
-1. Lyrics should start lookup before the "view lyrics is clicked" cause it can overload the edge function during prod.
-2. Sometimes the lyrics move without the screen following. I mean even as the lyrics is synced the active lyrics doesn't pop/stay in the center of the screen, the lyrics just gets highlighted like usual and keep going until the active lyrics is out of sight.
