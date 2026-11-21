@@ -7,8 +7,9 @@ import {
   removeOfflineLyrics,
   saveOfflineLyrics,
 } from "../services/offlineLyrics";
+import { LyricsUploadService } from "../services/lyricsUploadService";
 import { useAuth } from "./useAuth";
-import type { LyricLine } from "../types/lyrics";
+import type { LyricLine, LyricsSource } from "../types/lyrics";
 
 function appendLine(prev: LyricLine[] | null, line: LyricLine): LyricLine[] {
   const currentList = prev ?? [];
@@ -29,6 +30,8 @@ export function useLyricsStream(
   const [lyricsData, setLyricsData] = useState<LyricLine[] | null>(null);
   const [fetchingLyrics, setFetchingLyrics] = useState(false);
   const [isSynced, setIsSynced] = useState(true);
+  const [lyricsSource, setLyricsSource] = useState<LyricsSource>("provider");
+  const isUserUploadRef = useRef(false);
   const [quota, setQuota] = useState<StreamQuota | null>(null);
   const [quotaExceeded, setQuotaExceeded] = useState(false);
   const [isOfflineSaved, setIsOfflineSaved] = useState(false);
@@ -75,6 +78,8 @@ export function useLyricsStream(
     // server always sends `meta` before the first `item`, so in practice
     // this only matters for the brief window before the stream connects.
     setIsSynced(true);
+    setLyricsSource("provider");
+    isUserUploadRef.current = false;
 
     const skipOffline = bypassOfflineOnce.current;
     bypassOfflineOnce.current = false;
@@ -89,6 +94,7 @@ export function useLyricsStream(
         if (offline) {
           setLyricsData(offline.lyricsData);
           setIsSynced(offline.isSynced);
+          setLyricsSource(offline.lyricsSource ?? "provider");
           setIsOfflineSaved(true);
           setFetchingLyrics(false);
           return;
@@ -108,6 +114,10 @@ export function useLyricsStream(
         onLine: (line) => {
           if (cancelled) return;
           setFetchingLyrics(false);
+          if (line.source === "user" && !isUserUploadRef.current) {
+            isUserUploadRef.current = true;
+            setLyricsSource("user");
+          }
           setLyricsData((prev) => appendLine(prev, line));
         },
         onMeta: (meta) => {
@@ -118,6 +128,13 @@ export function useLyricsStream(
         onDone: () => {
           if (cancelled) return;
           setFetchingLyrics(false);
+          if (isUserUploadRef.current) {
+            LyricsUploadService.recheckProvidersInBackground(
+              title,
+              artist,
+              accessToken,
+            );
+          }
         },
         onError: (message, code) => {
           if (cancelled) return;
@@ -147,14 +164,15 @@ export function useLyricsStream(
       return;
     }
     if (!lyricsData || lyricsData.length === 0) return;
-    await saveOfflineLyrics(trackKey, { lyricsData, isSynced });
+    await saveOfflineLyrics(trackKey, { lyricsData, isSynced, lyricsSource });
     setIsOfflineSaved(true);
-  }, [trackKey, isOfflineSaved, lyricsData, isSynced]);
+  }, [trackKey, isOfflineSaved, lyricsData, isSynced, lyricsSource]);
 
   return {
     lyricsData,
     fetchingLyrics,
     isSynced,
+    lyricsSource,
     quota,
     quotaExceeded,
     lyricsError,

@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import type { LyricLine } from "../types/lyrics";
+import type { LyricLine, LyricsSource } from "../types/lyrics";
 
 // Step 5's premium hook, per Reads/me.md's sketch: lyrics/romanizations are
 // tiny strings, so a downloaded track is just its JSON payload sitting in
@@ -12,6 +12,7 @@ const KEY_PREFIX = "@offline_lyrics_";
 export type OfflineLyricsPayload = {
   lyricsData: LyricLine[];
   isSynced: boolean;
+  lyricsSource?: LyricsSource;
 };
 
 function storageKey(trackKey: string): string {
@@ -33,7 +34,16 @@ export async function getOfflineLyrics(
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed?.lyricsData)) return null;
-    return { lyricsData: parsed.lyricsData, isSynced: parsed.isSynced !== false };
+    const inferredSource: LyricsSource =
+      parsed.lyricsSource === "user" ||
+      parsed.lyricsData.some((line: LyricLine) => line?.source === "user")
+        ? "user"
+        : "provider";
+    return {
+      lyricsData: parsed.lyricsData,
+      isSynced: parsed.isSynced !== false,
+      lyricsSource: inferredSource,
+    };
   } catch (e) {
     console.warn("[OFFLINE LYRICS] Failed to read/parse stored lyrics:", e);
     return null;

@@ -9,9 +9,10 @@ export const ReportingService = {
   ): Promise<void> {
     try {
       // 1. Sanitize inputs to prevent trailing space failures
-      const cleanTitle = title.trim();
-      const cleanArtist = artist.trim();
+      const cleanTitle = title.trim().replace(/\s+/g, " ");
+      const cleanArtist = artist.trim().replace(/\s+/g, " ");
       const cleanNote = note?.trim();
+      const escapeLike = (v: string) => v.replace(/[\\%_]/g, (m) => `\\${m}`);
 
       // 2. Add high-visibility diagnostics to your Metro terminal
       console.log(`[REPORT QUERY] 🔍 Looking up: "${cleanTitle}" by "${cleanArtist}"`);
@@ -20,8 +21,9 @@ export const ReportingService = {
       const { data: song, error: songError } = await supabase
         .from("songs")
         .select("id")
-        .ilike("title", cleanTitle)   // Matches 'Soso' even if input is 'soso'
-        .ilike("artist", cleanArtist) // Matches 'Omah Lay' even if input is 'omah lay'
+        .ilike("title", escapeLike(cleanTitle))   // Matches 'Soso' even if input is 'soso'
+        .ilike("artist", escapeLike(cleanArtist)) // Matches 'Omah Lay' even if input is 'omah lay'
+        .limit(1)
         .maybeSingle();
 
       if (songError) throw new Error(`Database lookup failed: ${songError.message}`);

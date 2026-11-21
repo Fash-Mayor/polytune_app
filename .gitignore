@@ -8,6 +8,7 @@ mine.md
 dist/
 web-build/
 expo-env.d.ts
+Reads
 
 # Native
 .kotlin/

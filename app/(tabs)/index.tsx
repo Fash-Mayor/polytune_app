@@ -115,6 +115,7 @@ export default function NowPlayingScreen() {
     lyricsData,
     fetchingLyrics,
     isSynced,
+    lyricsSource,
     quotaExceeded,
     lyricsError,
     isOfflineSaved,
@@ -349,6 +350,7 @@ export default function NowPlayingScreen() {
               playbackPositionMs={playbackPositionMs}
               isRomanized={isRomanized}
               isSynced={isSynced}
+              lyricsSource={lyricsSource}
               karaokeMode={karaokeMode}
             />
           ) : quotaExceeded ? (

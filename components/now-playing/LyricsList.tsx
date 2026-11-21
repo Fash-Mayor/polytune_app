@@ -6,7 +6,7 @@ import {
   View,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import type { LineKind, LyricLine } from "../../types/lyrics";
+import type { LineKind, LyricLine, LyricsSource } from "../../types/lyrics";
 import { findActiveLineIndex } from "../../utils/lyricSync";
 import { useTheme } from "../../hooks/useTheme";
 import { usePreferences } from "../../hooks/usePreferences";
@@ -24,6 +24,8 @@ type LyricsListProps = {
    * sort-order index, not a real playback position, so highlighting/
    * auto-scrolling against it would be meaningless (or actively wrong). */
   isSynced?: boolean;
+  /** Whether these lyrics came from an external provider or a user upload. */
+  lyricsSource?: LyricsSource;
   /** Karaoke Mode: pop/glow the active line. No-ops naturally when unsynced,
    * since there's never a highlighted line to pop/glow without real timing. */
   karaokeMode?: boolean;
@@ -59,8 +61,9 @@ function resolveLinesForRow(
     }
   }
 
-  if (result.length === 0 && line.o?.trim()) {
-    result.push(line.o.trim());
+  const fallback = line.o?.trim() || line.tr?.trim() || line.r?.trim();
+  if (result.length === 0 && fallback) {
+    result.push(fallback);
   }
 
   return result;
@@ -71,6 +74,7 @@ export function LyricsList({
   playbackPositionMs,
   isRomanized,
   isSynced = true,
+  lyricsSource = "provider",
   karaokeMode = false,
 }: LyricsListProps) {
   const { accentColor } = useTheme();
@@ -78,37 +82,53 @@ export function LyricsList({
   const scrollViewRef = useRef<ScrollView>(null);
   const lyricPositions = useRef<Record<number, number>>({});
   const lastScrolledIndex = useRef(-1);
-  const isUserScrolling = useRef(false);
+  // Timestamp (ms) until which auto-scroll is paused because the user is
+  // dragging/flinging. A time-based lock (instead of a boolean that depends on
+  // drag/momentum end events all firing) can never get stuck "on".
+  const userScrollLockUntil = useRef(0);
 
   const layoutKey = lineLayout.join(",");
-
-  useEffect(() => {
-    lyricPositions.current = {};
-    lastScrolledIndex.current = -1;
-  }, [layoutKey]);
 
   const activeIndex = useMemo(
     () => (isSynced ? findActiveLineIndex(lyricsData, playbackPositionMs) : -1),
     [isSynced, lyricsData, playbackPositionMs],
   );
+  const activeIndexRef = useRef(activeIndex);
+  activeIndexRef.current = activeIndex;
 
+  // New song or new layout: cached positions and "already scrolled" state
+  // are stale and must be dropped.
   useEffect(() => {
-    if (!isSynced) return;
-    if (activeIndex === -1) return;
-    if (isUserScrolling.current) return;
-    if (lastScrolledIndex.current === activeIndex) return;
+    lyricPositions.current = {};
+    lastScrolledIndex.current = -1;
+    userScrollLockUntil.current = 0;
+  }, [layoutKey, lyricsData]);
 
-    const targetY = lyricPositions.current[activeIndex];
+  const scrollToActive = () => {
+    const index = activeIndexRef.current;
+    if (!isSynced || index === -1) return;
+    if (Date.now() < userScrollLockUntil.current) return;
+    if (lastScrolledIndex.current === index) return;
+
+    const targetY = lyricPositions.current[index];
+    // Row not measured yet; its onLayout will call us back.
     if (targetY === undefined) return;
 
-    lastScrolledIndex.current = activeIndex;
-
-    // Smoothly transition to position with native system physics deceleration
+    lastScrolledIndex.current = index;
     scrollViewRef.current?.scrollTo({
       y: Math.max(0, targetY - SCROLL_CENTER_OFFSET),
       animated: true,
     });
-  }, [activeIndex, isSynced]);
+  };
+
+  useEffect(() => {
+    scrollToActive();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeIndex, isSynced, lyricsData]);
+
+  const lockForUser = (ms: number) => {
+    userScrollLockUntil.current = Date.now() + ms;
+  };
 
   return (
     <ScrollView
@@ -122,21 +142,19 @@ export function LyricsList({
       showsVerticalScrollIndicator={false}
       scrollEventThrottle={16} // Maximizes scroll listener interaction responsiveness
       decelerationRate="fast"
-      onScrollBeginDrag={() => {
-        isUserScrolling.current = true;
-      }}
-      onMomentumScrollEnd={() => {
-        isUserScrolling.current = false;
-      }}
-      onScrollEndDrag={() => {
-        isUserScrolling.current = false;
-      }}
+      onScrollBeginDrag={() => lockForUser(60_000)}
+      onScrollEndDrag={() => lockForUser(2500)}
+      onMomentumScrollEnd={() => lockForUser(1500)}
     >
       {!isSynced ? (
         <View className="flex-row items-center self-center px-3 py-1.5 mb-6 border rounded-pill border-mine-border bg-mine-card">
-          <MaterialCommunityIcons name="sync-off" size={14} color={accentColor} />
+          <MaterialCommunityIcons
+            name={lyricsSource === "user" ? "account-music-outline" : "sync-off"}
+            size={14}
+            color={accentColor}
+          />
           <Text className="ml-1.5 text-xs font-outfit-semibold text-mine-muted">
-            Unsynced Lyrics
+            {lyricsSource === "user" ? "User Upload" : "Unsynced Lyrics"}
           </Text>
         </View>
       ) : null}
@@ -161,6 +179,7 @@ export function LyricsList({
             onLayout={(event) => {
               // Cache immutable layout targets strictly to bypass recalculations
               lyricPositions.current[index] = event.nativeEvent.layout.y;
+              if (index === activeIndexRef.current) scrollToActive();
             }}
           />
         );
