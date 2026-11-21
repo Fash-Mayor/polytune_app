@@ -131,60 +131,68 @@ export function LyricsList({
   };
 
   return (
-    <ScrollView
-      ref={scrollViewRef}
-      className="flex-1"
-      contentContainerStyle={{
-        paddingHorizontal: 28,
-        paddingBottom: SCREEN_HEIGHT / 1.8,
-        paddingTop: 40,
-      }}
-      showsVerticalScrollIndicator={false}
-      scrollEventThrottle={16} // Maximizes scroll listener interaction responsiveness
-      decelerationRate="fast"
-      onScrollBeginDrag={() => lockForUser(60_000)}
-      onScrollEndDrag={() => lockForUser(2500)}
-      onMomentumScrollEnd={() => lockForUser(1500)}
-    >
+    <View className="flex-1">
       {!isSynced ? (
-        <View className="flex-row items-center self-center px-3 py-1.5 mb-6 border rounded-pill border-mine-border bg-mine-card">
-          <MaterialCommunityIcons
-            name={lyricsSource === "user" ? "account-music-outline" : "sync-off"}
-            size={14}
-            color={accentColor}
-          />
-          <Text className="ml-1.5 text-xs font-outfit-semibold text-mine-muted">
-            {lyricsSource === "user" ? "User Upload" : "Unsynced Lyrics"}
-          </Text>
+        <View
+          pointerEvents="none"
+          className="absolute left-0 right-0 z-10 items-center"
+          style={{ top: 14 }}
+        >
+          <View className="flex-row items-center px-3 py-1.5 border rounded-pill border-mine-border bg-mine-card">
+            <MaterialCommunityIcons
+              name={lyricsSource === "user" ? "account-music-outline" : "sync-off"}
+              size={14}
+              color={accentColor}
+            />
+            <Text className="ml-1.5 text-xs font-outfit-semibold text-mine-muted">
+              {lyricsSource === "user" ? "User Upload" : "Unsynced Lyrics"}
+            </Text>
+          </View>
         </View>
       ) : null}
-      {lyricsData.map((line, index) => {
-        // Unsynced lyrics have no notion of a "current" line: don't dim any
-        // line (there's nothing to dim it *against*), but don't accent-color
-        // every line either - that's reserved for "this is playing right
-        // now", which isn't a claim we can make without real timestamps.
-        const isHighlighted = isSynced && index === activeIndex;
-        const isDimmed = isSynced && !isHighlighted;
-        const lineKey = `${line.timeMs}-${line.o}-${layoutKey}`;
-        const lines = resolveLinesForRow(line, lineLayout, isRomanized);
+      <ScrollView
+        ref={scrollViewRef}
+        className="flex-1"
+        contentContainerStyle={{
+          paddingHorizontal: 28,
+          paddingBottom: SCREEN_HEIGHT / 1.8,
+          paddingTop: !isSynced ? 64 : 40,
+        }}
+        showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16} // Maximizes scroll listener interaction responsiveness
+        decelerationRate="fast"
+        onScrollBeginDrag={() => lockForUser(60_000)}
+        onScrollEndDrag={() => lockForUser(2500)}
+        onMomentumScrollEnd={() => lockForUser(1500)}
+      >
+        {lyricsData.map((line, index) => {
+          // Unsynced lyrics have no notion of a "current" line: don't dim any
+          // line (there's nothing to dim it *against*), but don't accent-color
+          // every line either - that's reserved for "this is playing right
+          // now", which isn't a claim we can make without real timestamps.
+          const isHighlighted = isSynced && index === activeIndex;
+          const isDimmed = isSynced && !isHighlighted;
+          const lineKey = `${line.timeMs}-${line.o}-${layoutKey}`;
+          const lines = resolveLinesForRow(line, lineLayout, isRomanized);
 
-        return (
-          <LyricLineRow
-            key={lineKey}
-            lines={lines}
-            isHighlighted={isHighlighted}
-            isDimmed={isDimmed}
-            karaokeMode={karaokeMode}
-            accentColor={accentColor}
-            onLayout={(event) => {
-              // Cache immutable layout targets strictly to bypass recalculations
-              lyricPositions.current[index] = event.nativeEvent.layout.y;
-              if (index === activeIndexRef.current) scrollToActive();
-            }}
-          />
-        );
-      })}
-    </ScrollView>
+          return (
+            <LyricLineRow
+              key={lineKey}
+              lines={lines}
+              isHighlighted={isHighlighted}
+              isDimmed={isDimmed}
+              karaokeMode={karaokeMode}
+              accentColor={accentColor}
+              onLayout={(event) => {
+                // Cache immutable layout targets strictly to bypass recalculations
+                lyricPositions.current[index] = event.nativeEvent.layout.y;
+                if (index === activeIndexRef.current) scrollToActive();
+              }}
+            />
+          );
+        })}
+      </ScrollView>
+    </View>
   );
 }
 
