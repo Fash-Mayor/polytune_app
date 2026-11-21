@@ -1,13 +1,19 @@
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Keyboard,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
+  Pressable,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../hooks/useTheme";
 
 type SyncIssueModalProps = {
@@ -28,9 +34,11 @@ export function SyncIssueModal({
   onSubmit,
 }: SyncIssueModalProps) {
   const { accentColor } = useTheme();
+  const insets = useSafeAreaInsets();
   const [note, setNote] = useState("");
   const [state, setState] = useState<SubmitState>("form");
   const [errorMessage, setErrorMessage] = useState("");
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   // Reset to a clean form every time the modal is (re)opened for a new report.
   useEffect(() => {
@@ -38,10 +46,31 @@ export function SyncIssueModal({
       setNote("");
       setState("form");
       setErrorMessage("");
+      setKeyboardHeight(0);
     }
   }, [visible]);
 
+  useEffect(() => {
+    const showEvent =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+
+    const showSub = Keyboard.addListener(showEvent, (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
   const handleSubmit = async () => {
+    Keyboard.dismiss();
     setState("submitting");
     try {
       await onSubmit(note);
@@ -52,6 +81,11 @@ export function SyncIssueModal({
     }
   };
 
+  const bottomOffset =
+    keyboardHeight > 0
+      ? keyboardHeight + 16
+      : Math.max(insets.bottom + 16, 32);
+
   return (
     <Modal
       visible={visible}
@@ -60,8 +94,28 @@ export function SyncIssueModal({
       statusBarTranslucent
       onRequestClose={onClose}
     >
-      <View className="justify-end flex-1 px-4 pb-8 bg-black/80">
-        <View className="w-full p-6 border rounded-3xl border-mine-border bg-mine-card">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        className="flex-1 bg-black/80"
+      >
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: "flex-end",
+            paddingHorizontal: 16,
+            paddingTop: insets.top + 24,
+            paddingBottom: bottomOffset,
+          }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <Pressable
+            className="flex-1"
+            onPress={() => {
+              if (keyboardHeight > 0) Keyboard.dismiss();
+            }}
+          />
+          <View className="w-full p-6 border rounded-3xl border-mine-border bg-mine-card">
           {state === "success" ? (
             <View className="items-center py-2">
               <View
@@ -165,8 +219,9 @@ export function SyncIssueModal({
               </View>
             </>
           )}
-        </View>
-      </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

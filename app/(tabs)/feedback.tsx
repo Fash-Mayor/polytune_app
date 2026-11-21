@@ -4,13 +4,13 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Alert,
   ActivityIndicator,
+  Modal,
+  Pressable,
 } from "react-native";
 import { useState } from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
 import { ReportingService } from "../../services/reportingService";
 import {
   LyricsUploadService,
@@ -20,6 +20,13 @@ import { useTheme } from "../../hooks/useTheme";
 
 type FeedbackType = "bug" | "lyrics";
 type LyricsTab = "original" | "romanised" | "english";
+type NoticeVariant = "success" | "error";
+
+type FeedbackNotice = {
+  variant: NoticeVariant;
+  title: string;
+  message: string;
+};
 
 const LYRICS_TABS: { key: LyricsTab; label: string; placeholder: string }[] = [
   {
@@ -41,7 +48,6 @@ const LYRICS_TABS: { key: LyricsTab; label: string; placeholder: string }[] = [
 
 export default function FeedbackScreen() {
   const insets = useSafeAreaInsets();
-  const router = useRouter();
   const { accentColor } = useTheme();
   const [type, setType] = useState<FeedbackType>("bug");
   const [details, setDetails] = useState("");
@@ -54,24 +60,33 @@ export default function FeedbackScreen() {
     english: "",
   });
   const [submitting, setSubmitting] = useState(false);
+  const [notice, setNotice] = useState<FeedbackNotice | null>(null);
 
   const activeLyricsTab = LYRICS_TABS.find((t) => t.key === lyricsTab)!;
+
+  const showNotice = (
+    variant: NoticeVariant,
+    title: string,
+    message: string,
+  ) => {
+    setNotice({ variant, title, message });
+  };
 
   const submitFeedback = async () => {
     if (submitting) return;
 
     if (type === "bug") {
       if (!details.trim()) {
-        Alert.alert("Error", "Please provide details.");
+        showNotice("error", "Missing Details", "Please describe the bug you encountered before submitting.");
         return;
       }
       setSubmitting(true);
       try {
         await ReportingService.reportBug(details);
-        Alert.alert("Thank You!", "Your bug report has been submitted.");
+        showNotice("success", "Thank You!", "Your bug report has been submitted and logged for review.");
         setDetails("");
       } catch (err: any) {
-        Alert.alert("Submission Error", err.message);
+        showNotice("error", "Submission Error", err?.message ?? "Could not submit your bug report right now. Please try again.");
       } finally {
         setSubmitting(false);
       }
@@ -81,7 +96,8 @@ export default function FeedbackScreen() {
     const cleanTitle = songTitle.trim();
     const cleanArtist = artist.trim();
     if (!cleanTitle || !cleanArtist) {
-      Alert.alert(
+      showNotice(
+        "error",
         "Missing Info",
         "Please enter both the Song Title and Artist.",
       );
@@ -94,7 +110,8 @@ export default function FeedbackScreen() {
     })).filter((tab) => tab.lines.length > 0);
 
     if (filledTabs.length === 0) {
-      Alert.alert(
+      showNotice(
+        "error",
         "Missing Lyrics",
         "Please enter lyrics in at least one tab (Original, Romanised, or English).",
       );
@@ -109,7 +126,8 @@ export default function FeedbackScreen() {
       const counts = filledTabs
         .map((tab) => `${tab.label}: ${tab.lines.length} lines`)
         .join("\n");
-      Alert.alert(
+      showNotice(
+        "error",
         "Line Count Mismatch",
         `Every filled tab must have the same number of lines so the lyrics stay aligned:\n\n${counts}`,
       );
@@ -125,7 +143,8 @@ export default function FeedbackScreen() {
         romanised: lyrics.romanised,
         english: lyrics.english,
       });
-      Alert.alert(
+      showNotice(
+        "success",
         "Thank You!",
         "Your lyrics have been uploaded and are now live whenever this song is played.",
       );
@@ -133,7 +152,8 @@ export default function FeedbackScreen() {
       setArtist("");
       setLyrics({ original: "", romanised: "", english: "" });
     } catch (err: any) {
-      Alert.alert(
+      showNotice(
+        "error",
         "Upload Failed",
         err?.message ?? "Could not upload lyrics right now. Please try again.",
       );
@@ -327,6 +347,62 @@ export default function FeedbackScreen() {
           <Text className="text-lg font-outfit-bold text-mine-bg">Submit</Text>
         )}
       </TouchableOpacity>
+
+      <Modal
+        visible={notice !== null}
+        transparent
+        animationType="slide"
+        statusBarTranslucent
+        onRequestClose={() => setNotice(null)}
+      >
+        <Pressable
+          className="justify-end flex-1 px-4 bg-black/80"
+          style={{ paddingBottom: Math.max(insets.bottom + 16, 32) }}
+          onPress={() => setNotice(null)}
+        >
+          <Pressable
+            className="w-full p-6 border rounded-3xl border-mine-border bg-mine-card"
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View className="items-center py-2">
+              <View
+                className="items-center justify-center w-14 h-14 mb-4 rounded-full"
+                style={{
+                  backgroundColor:
+                    notice?.variant === "error"
+                      ? "rgba(248, 113, 113, 0.15)"
+                      : `${accentColor}22`,
+                }}
+              >
+                <MaterialCommunityIcons
+                  name={
+                    notice?.variant === "error"
+                      ? "alert-circle-outline"
+                      : "check-circle-outline"
+                  }
+                  size={30}
+                  color={notice?.variant === "error" ? "#F87171" : accentColor}
+                />
+              </View>
+              <Text className="text-lg text-center font-outfit-bold text-mine-white">
+                {notice?.title}
+              </Text>
+              <Text className="mt-2 text-sm leading-5 text-center font-sans text-mine-muted">
+                {notice?.message}
+              </Text>
+              <TouchableOpacity
+                onPress={() => setNotice(null)}
+                className="w-full items-center justify-center rounded-pill py-3.5 mt-6"
+                style={{ backgroundColor: accentColor }}
+              >
+                <Text className="text-base font-outfit-bold text-mine-bg">
+                  {notice?.variant === "error" ? "Got It" : "Done"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </ScrollView>
   );
 }
