@@ -1,8 +1,13 @@
 import EventSource from "react-native-sse";
 import type { LyricLine } from "../types/lyrics";
 
+const SUPABASE_URL = (process.env.EXPO_PUBLIC_SUPABASE_URL ?? "").replace(
+  /\/+$/,
+  "",
+);
 const SUPABASE_FUNCTION_URL =
-  process.env.EXPO_PUBLIC_SUPABASE_FUNCTION_URL ?? "";
+  process.env.EXPO_PUBLIC_SUPABASE_FUNCTION_URL ||
+  (SUPABASE_URL ? `${SUPABASE_URL}/functions/v1/fetch-lyrics` : "");
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
 export type StreamQuota = { used: number; limit: number; isPro: boolean };
