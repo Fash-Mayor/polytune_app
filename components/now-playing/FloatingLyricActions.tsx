@@ -46,7 +46,7 @@ export function FloatingLyricActions({
           color="#FFFFFF"
         />
         <Text className="ml-2 text-sm font-outfit-semibold text-mine-white">
-          Sync Issue
+          Problem?
         </Text>
       </TouchableOpacity>
 

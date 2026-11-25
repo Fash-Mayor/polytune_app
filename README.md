@@ -6,7 +6,9 @@ PolyTune is a native Android application built with React Native and Expo that p
 
 Instead of waiting for official translations, PolyTune intercepts your media session, pulls the raw lyrics, and streams Romanized and translated lyrics directly to your screen using AI.
 
-![PolyTune Showcase](link-to-your-gif-or-image-here.gif)
+![PolyTune Showcase](assets/img2.jpeg)
+
+![PolyTune Showcase](assets/img1.jpeg)
 
 ## ✨ Features
 * **Universal Sync:** Works with Spotify, YouTube Music, or any app broadcasting a media session.

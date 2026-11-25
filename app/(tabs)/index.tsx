@@ -61,11 +61,9 @@ export default function NowPlayingScreen() {
     setIsRomanized(false);
   }, [lineLayout]);
 
-  const defaultRomanizedFirst =
-    lineLayout.includes("r") &&
-    (!lineLayout.includes("o") ||
-      lineLayout.indexOf("r") < lineLayout.indexOf("o"));
-  const showingRomanized = defaultRomanizedFirst ? !isRomanized : isRomanized;
+  const onlyRomanizedEnabled =
+    lineLayout.includes("r") && !lineLayout.includes("o");
+  const showingRomanized = onlyRomanizedEnabled ? !isRomanized : isRomanized;
 
   useEffect(() => {
     const verify = async () => {
@@ -346,6 +344,8 @@ export default function NowPlayingScreen() {
             </View>
           ) : lyricsData && lyricsData.length > 0 ? (
             <LyricsList
+              key={trackKey ?? "none"}
+              trackKey={trackKey}
               lyricsData={lyricsData}
               playbackPositionMs={playbackPositionMs}
               isRomanized={isRomanized}

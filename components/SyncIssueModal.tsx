@@ -132,7 +132,7 @@ export function SyncIssueModal({
                 Thank You!
               </Text>
               <Text className="mt-1 text-sm text-center font-sans text-mine-muted">
-                The sync issue has been logged for correction.
+                The problem has been logged for correction.
               </Text>
               <TouchableOpacity
                 onPress={onClose}
@@ -158,7 +158,7 @@ export function SyncIssueModal({
                   />
                 </View>
                 <Text className="text-xl text-center font-outfit-bold text-mine-white">
-                  Report Sync Issue
+                  Report an Issue
                 </Text>
                 <Text
                   className="mt-1 text-sm text-center font-sans text-mine-muted"
